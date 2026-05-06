@@ -169,3 +169,26 @@ A arquitetura do **DevLevel** segue o padrão **Monólito Modular** com clara se
 - **Decorator Pattern:** Cálculo de bônus (streaks, rankings)
 
 ### Fluxo de Dados Principal
+
+### Decisões Arquiteturais Importantes
+1. **Monólito Modular vs Microsserviços:** Escolhido monólito por simplicidade inicial, mas com módulos bem definidos (XP, Rankings, Missões, Conteúdos) para facilitar extração futura.
+2. **Banco Relacional vs NoSQL:** PostgreSQL escolhido pela consistência ACID necessária para transações de XP e DevCoins.
+3. **Cache Distribuído:** Redis implementado para rankings semanais (evita sobrecarga no banco).
+4. **Event-Driven:** RabbitMQ para eventos assíncronos (ex: notificações de level up, atualização de ranking).
+
+### Trade-offs
+- **Monólito:** ✅ Simplicidade de deploy, ✅ transações ACID, ⚠️ acoplamento inicial, ⚠️ escalabilidade vertical limitada.
+- **Cache:** ✅ Performance, ⚠️ complexidade de invalidação, ⚠️ consistência eventual.
+
+### Exemplos de diagramas
+
+| Diagrama de Arquitetura | Detalhe da Arquitetura |
+| :---: | :---: |
+| **Visão Geral (Macro)** | **Camada de Serviços (XP Engine)** |
+| <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=Arquitetura+Macro" alt="Diagrama de Visão Geral" width="300"> | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=XP+Engine" alt="Diagrama XP Engine" width="300"> |
+| **Modelo de Dados (DER)** | **Fluxo de Autenticação** |
+| <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=DER" alt="Diagrama Entidade-Relacionamento" width="300"> | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=Login+Flow" alt="Diagrama de Sequência - Login" width="300"> |
+| **Infraestrutura (AWS)** | **API Endpoints** |
+| <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=AWS+Deploy" alt="Diagrama de Deploy AWS" width="300"> | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=API+Map" alt="Mapa de Endpoints" width="300"> |
+
+---
