@@ -1,0 +1,215 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #F5F5F5
+skinparam class {
+  BackgroundColor white
+  BorderColor Black
+  ArrowColor Black
+}
+
+' === Enums ===
+enum TipoNotificacao {
+  EVOLUCAO
+  MENTORIA
+  CONQUISTA
+  ALERTA
+}
+
+enum StatusMentoria {
+  PENDENTE
+  ACEITA
+  RECUSADA
+  CONCLUIDA
+  CANCELADA
+}
+
+enum TrilhaEspecializacao {
+  FRONT_END
+  BACK_END
+  DADOS
+  MOBILE
+  DEVOPS
+}
+
+' === Interface ===
+interface Autenticavel {
+  + autenticar(email: String, senha: String): Boolean
+  + resetarSenha(email: String): Boolean
+}
+
+' === Classe Abstrata Usuario ===
+abstract class Usuario {
+  - id: Long
+  - nome: String
+  - email: String
+  - senha: String
+  - dataRegistro: Date
+  - statusConta: String
+  - fotoPerfil: String
+  --
+  + atualizarPerfil(dados: Map): Boolean
+  + alterarSenha(senhaAntiga: String, novaSenha: String): Boolean
+  + consultarInfo(): Map
+  + {abstract} getPermissoes(): List<String>
+}
+
+' === Classes Especializadas ===
+class Aluno {
+  - nivel: Integer
+  - xpTotal: Integer
+  - devCoins: Integer
+  - streakAtual: Integer
+  - trilhaPrincipal: TrilhaEspecializacao
+  - trilhaSecundaria: TrilhaEspecializacao
+  - badgesConquistadas: List<Badge>
+  --
+  + adicionarXP(pontos: Integer): void
+  + subirNivel(): void
+  + adicionarDevCoins(quantidade: Integer): void
+  + consultarRanking(): Map
+  + escolherTrilha(trilha: TrilhaEspecializacao): Boolean
+}
+
+class Mentor {
+  - especialidade: String
+  - turmas: List<Turma>
+  - alunosMentorados: List<Aluno>
+  - horasDisponiveis: Integer
+  - avaliacaoMedia: Float
+  --
+  + listarAlunosTurma(turmaId: Long): List<Aluno>
+  + validarConquista(alunoId: Long, conquistaId: Long): Boolean
+  + gerenciarMentoria(solicitacaoId: Long, acao: String): Boolean
+  + gerarRelatorio(turmaId: Long): Relatorio
+}
+
+class Administrador {
+  - nivelPermissao: String
+  - permissoes: List<String>
+  - logAcoes: List<String>
+  --
+  + gerenciarConteudo(operacao: String, dados: Map): Boolean
+  + gerenciarBadge(badgeId: Long, operacao: String): Boolean
+  + gerenciarForum(postId: Long, acao: String): Boolean
+  + visualizarLogs(filtro: Map): List<String>
+}
+
+' === Classes de Domínio ===
+class Turma {
+  - id: Long
+  - nome: String
+  - dataInicio: Date
+  - dataFimPrevista: Date
+  - horarios: String
+  - status: String
+  --
+  + adicionarAluno(aluno: Aluno): Boolean
+  + removerAluno(alunoId: Long): Boolean
+  + calcularEstatisticas(): Map
+  + gerarRanking(): List<Aluno>
+}
+
+class Badge {
+  - id: Long
+  - nome: String
+  - descricao: String
+  - iconeUrl: String
+  - criterioDesbloqueio: String
+  - xpConcessao: Integer
+  --
+  + obterDetalhes(): Map
+}
+
+class Conteudo {
+  - id: Long
+  - titulo: String
+  - descricao: String
+  - tipo: String
+  - urlRecurso: String
+  - nivelMinimo: Integer
+  - trilhaAssociada: TrilhaEspecializacao
+  - duracaoEstimada: Integer
+  --
+  + acessar(aluno: Aluno): Boolean
+  + atualizarRequisitos(nivel: Integer): void
+}
+
+class MissaoDiaria {
+  - id: Long
+  - descricao: String
+  - tipo: String
+  - recompensaXp: Integer
+  - recompensaDevCoins: Integer
+  - dataValidade: Date
+  - status: String
+  --
+  + completar(): Boolean
+  + trocarMissao(custoXp: Integer): Boolean
+  + verificarExpiracao(): Boolean
+}
+
+class Mentoria {
+  - id: Long
+  - dataHora: Date
+  - duracao: Integer
+  - status: StatusMentoria
+  - linkVideoconferencia: String
+  - feedback: String
+  --
+  + aceitar(): Boolean
+  + recusar(): Boolean
+  + cancelar(): Boolean
+  + concluir(): Boolean
+}
+
+class Matricula {
+  - id: Long
+  - dataMatricula: Date
+  - desempenho: Float
+  - faltas: Integer
+  --
+  + obterDesempenho(): Map
+}
+
+class Notificacao {
+  - id: Long
+  - titulo: String
+  - mensagem: String
+  - tipo: TipoNotificacao
+  - dataEnvio: Date
+  - statusLeitura: Boolean
+  --
+  + enviar(): Boolean
+  + marcarComoLida(): void
+}
+
+' === Associações dos Enums com as Classes ===
+Aluno --> TrilhaEspecializacao : utiliza
+Conteudo --> TrilhaEspecializacao : utiliza
+Mentoria --> StatusMentoria : utiliza
+Notificacao --> TipoNotificacao : utiliza
+
+' === Relacionamentos entre Classes ===
+Usuario ..|> Autenticavel : realiza
+Aluno --|> Usuario
+Mentor --|> Usuario
+Administrador --|> Usuario
+
+Usuario "1" -- "0..*" Notificacao : recebe
+
+Mentor "1" -- "0..*" Turma : gerencia
+Turma "1" -- "0..*" Matricula : contém
+Aluno "1" -- "0..*" Matricula : realiza
+
+Aluno "1" -- "0..*" MissaoDiaria : possui
+Aluno "1" -- "0..*" Badge : conquista
+
+Mentor "1" -- "0..*" Mentoria : atende
+Aluno "1" -- "0..*" Mentoria : solicita
+
+Administrador "1" -- "0..*" Conteudo : gerencia
+Administrador "1" -- "0..*" Badge : gerencia
+
+note top of Matricula : Classe associativa\nentre Aluno e Turma
+
+@enduml
