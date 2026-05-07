@@ -1,0 +1,242 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-07: Ajudar Colega no Fórum
+
+actor Aluno as A
+participant "Interface\nWeb" as UI
+participant "Controlador\nFórum" as CF
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nPermissões" as Perm
+participant "Serviço de\nFórum" as SF
+participant "Serviço de\nXP" as XP
+participant "Serviço de\nNotificação" as Notif
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Visualizar Perguntas ==
+
+A -> UI: 1. acessarForum()
+activate UI
+
+UI -> CF: 2. listarPerguntasPendentes(filtros, token)
+activate CF
+
+CF -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CF: 4. usuarioAutenticado(alunoId)
+deactivate Auth
+
+CF -> Perm: 5. validarPermissao(alunoId, "ALUNO", "FORUM", "VISUALIZAR")
+activate Perm
+Perm --> CF: 6. permissaoValida
+deactivate Perm
+
+CF -> Repo: 7. buscarPerguntasPendentes()
+activate Repo
+Repo -> DB: 8. SELECT p.*, a.nome as autor\nFROM perguntas_forum p\nJOIN alunos a ON p.aluno_id = a.id\nWHERE p.resposta_id IS NULL\nAND p.status = 'PENDENTE'\nORDER BY p.data_criacao DESC\nLIMIT 20
+DB --> Repo: 9. listaPerguntas
+Repo --> CF: 10. perguntas
+deactivate Repo
+
+CF --> UI: 11. exibirPerguntas(perguntas)
+UI --> A: 12. 📋 Perguntas pendentes:\n- "Como fazer um loop infinito?" (João)\n- "Diferença entre == e .equals()?" (Maria)
+deactivate CF
+
+== Fluxo Principal - Responder Pergunta ==
+
+A -> UI: 13. selecionarPergunta(perguntaId)
+activate UI
+UI -> CF: 14. buscarPergunta(perguntaId, token)
+activate CF
+
+CF -> Auth: 15. validarToken(token)
+activate Auth
+Auth --> CF: 16. usuarioAutenticado
+deactivate Auth
+
+CF -> Repo: 17. buscarPerguntaCompleta(perguntaId)
+activate Repo
+Repo -> DB: 18. SELECT p.*, a.nome as autor,\n       a.id as autor_id\nFROM perguntas_forum p\nJOIN alunos a ON p.aluno_id = a.id\nWHERE p.id = ?
+DB --> Repo: 19. pergunta
+Repo --> CF: 20. dadosPergunta
+deactivate Repo
+
+CF --> UI: 21. exibirPergunta(dadosPergunta)
+UI --> A: 22. ❓ Pergunta de " + autorNome + ":\n" + pergunta.conteudo + "\n\n📝 Escreva sua resposta:"
+
+A -> UI: 23. escreverResposta(conteudoResposta)
+activate UI
+UI -> CF: 24. responderPergunta(perguntaId, conteudoResposta, token)
+activate CF
+
+CF -> Auth: 25. validarToken(token)
+activate Auth
+Auth --> CF: 26. usuarioAutenticado
+deactivate Auth
+
+CF -> Perm: 27. validarPermissao(alunoId, "ALUNO", "FORUM", "RESPONDER")
+activate Perm
+Perm --> CF: 28. permissaoValida
+deactivate Perm
+
+CF -> SF: 29. salvarResposta(perguntaId, alunoId, conteudoResposta)
+activate SF
+
+SF -> SF: 30. verificarQualidadeResposta(conteudoResposta)
+note right of SF: Valida tamanho mínimo,\nconteúdo significativo
+
+alt Resposta muito curta ou baixa qualidade
+    SF --> CF: 31. erro("Resposta muito curta ou sem conteúdo útil")
+    CF --> UI: 32. erro
+    UI --> A: 33. ⚠️ "Resposta muito curta.\nAjude com mais detalhes."
+    
+else Resposta válida
+    SF -> Repo: 34. criarResposta(perguntaId, alunoId, conteudoResposta)
+    activate Repo
+    Repo -> DB: 35. INSERT INTO respostas_forum\n(pergunta_id, aluno_id, conteudo, data_resposta, votos)\nVALUES (?, ?, ?, NOW(), 0)
+    DB --> Repo: 36. respostaId
+    deactivate Repo
+    
+    SF -> Repo: 37. atualizarPergunta(perguntaId, respostaId)
+    activate Repo
+    Repo -> DB: 38. UPDATE perguntas_forum\nSET resposta_id = ?, status = 'RESPONDIDA', data_resposta = NOW()\nWHERE id = ?
+    DB --> Repo: 39. atualizado
+    deactivate Repo
+    
+    ' === Conceder XP por ajuda ===
+    SF -> XP: 40. adicionarXP(alunoId, 15)
+    activate XP
+    XP -> Repo: 41. atualizarXPTotal(alunoId, 15)
+    activate Repo
+    Repo -> DB: 42. UPDATE alunos SET xp_total = xp_total + 15 WHERE id = ?
+    deactivate Repo
+    XP --> SF: 42. xpAdicionado
+    deactivate XP
+    
+    ' === Notificar autor da pergunta ===
+    SF -> Notif: 43. notificarAutorPergunta(autorId, perguntaId, alunoId)
+    activate Notif
+    
+    Notif -> Repo: 44. buscarDadosAutor(autorId)
+    activate Repo
+    Repo -> DB: 45. SELECT nome, email FROM alunos WHERE id = ?
+    DB --> Repo: 46. autor
+    deactivate Repo
+    
+    Notif -> Notif: 47. montarMensagem("Sua pergunta foi respondida!\n" + resposta.resumo)
+    
+    Notif -> Repo: 48. registrarNotificacao(autorId, mensagem, "FORUM")
+    activate Repo
+    Repo -> DB: 49. INSERT INTO notificacoes...
+    deactivate Repo
+    
+    Notif ->> Autor: 50. 📧 "Sua pergunta recebeu uma resposta!"
+    
+    deactivate Notif
+    
+    SF --> CF: 51. sucesso(respostaId)
+    deactivate SF
+    
+    CF --> UI: 52. confirmacao()
+    UI --> A: 53. ✅ "Resposta enviada com sucesso!\n+15 XP por ajudar um colega!"
+    
+    ' === Verificar nível do aluno (pode desencadear UC-01) ===
+    CF -> XP: 54. verificarLevelUp(alunoId)
+    activate XP
+    XP --> CF: 55. nivelVerificado
+    deactivate XP
+end
+
+deactivate CF
+deactivate UI
+
+== Fluxo - Marcar Resposta como Melhor (Autor da Pergunta) ==
+
+note over A: O autor da pergunta pode\nmarcar uma resposta como "melhor"
+
+A -> UI: 56. acessarMinhasPerguntas()
+activate UI
+UI -> CF: 57. listarMinhasPerguntas(token)
+activate CF
+
+CF -> Auth: 58. validarToken(token)
+activate Auth
+Auth --> CF: 59. usuarioAutenticado
+deactivate Auth
+
+CF -> Repo: 60. buscarPerguntasPorAluno(alunoId)
+activate Repo
+Repo -> DB: 61. SELECT * FROM perguntas_forum\nWHERE aluno_id = ?\nAND status = 'RESPONDIDA'
+DB --> Repo: 62. perguntas
+deactivate Repo
+
+CF --> UI: 63. exibirPerguntas(perguntas)
+UI --> A: 64. Minhas perguntas:\n- "Como fazer...?" (com resposta)
+
+A -> UI: 65. marcarMelhorResposta(perguntaId, respostaId)
+activate UI
+UI -> CF: 66. marcarRespostaComoMelhor(perguntaId, respostaId, token)
+activate CF
+
+CF -> Auth: 67. validarToken(token)
+activate Auth
+Auth --> CF: 68. usuarioAutenticado
+deactivate Auth
+
+CF -> Perm: 69. validarPermissao(alunoId, "ALUNO", "FORUM", "MELHOR_RESPOSTA")
+activate Perm
+Perm --> CF: 70. permissaoValida
+deactivate Perm
+
+CF -> SF: 71. definirMelhorResposta(perguntaId, respostaId)
+activate SF
+
+SF -> Repo: 72. verificarAutorPergunta(perguntaId, alunoId)
+activate Repo
+Repo -> DB: 73. SELECT aluno_id FROM perguntas_forum WHERE id = ?
+DB --> Repo: 74. autorId
+deactivate Repo
+
+alt Aluno não é o autor da pergunta
+    SF --> CF: 75. erro("Apenas o autor pode marcar a melhor resposta")
+    CF --> UI: 76. erro
+    UI --> A: 77. ❌ "Apenas o autor da pergunta pode marcar a melhor resposta."
+    
+else Autor válido
+    SF -> Repo: 78. atualizarMelhorResposta(perguntaId, respostaId)
+    activate Repo
+    Repo -> DB: 79. UPDATE perguntas_forum\nSET melhor_resposta_id = ?, status = 'CONCLUIDA'\nWHERE id = ?
+    DB --> Repo: 80. atualizado
+    deactivate Repo
+    
+    ' === Bônus extra para o respondente ===
+    SF -> Repo: 81. buscarRespondedorId(respostaId)
+    activate Repo
+    Repo -> DB: 82. SELECT aluno_id FROM respostas_forum WHERE id = ?
+    DB --> Repo: 83. respondedorId
+    deactivate Repo
+    
+    SF -> XP: 84. adicionarXP(respondedorId, 25)
+    activate XP
+    XP -> Repo: 85. atualizarXPTotal(respondedorId, 25)
+    activate Repo
+    Repo -> DB: 86. UPDATE alunos SET xp_total = xp_total + 25 WHERE id = ?
+    deactivate Repo
+    XP --> SF: 87. bonusAdicionado
+    deactivate XP
+    
+    SF -> Notif: 88. notificarMelhorResposta(respondedorId, perguntaId)
+    activate Notif
+    Notif ->> Respondedor: 89. 🏆 "Sua resposta foi marcada como melhor!"
+    deactivate Notif
+    
+    SF --> CF: 90. sucesso()
+    deactivate SF
+    
+    CF --> UI: 91. confirmacao()
+    UI --> A: 92. ✅ "Resposta marcada como melhor!\nO colega recebeu +25 XP como bônus."
+end
+
+deactivate CF
+deactivate UI
+
+@enduml
