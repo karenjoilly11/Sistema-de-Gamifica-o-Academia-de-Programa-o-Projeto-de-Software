@@ -1,0 +1,172 @@
+@startuml
+title DevLevel - Realizar Exercício (UC-09)
+
+actor Aluno as A
+participant "Interface\nWeb" as UI
+participant "Controlador\nExercício" as CE
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nPermissões" as Perm
+participant "Serviço de\nXP" as XP
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+participant "Sistema de\nNotificação" as Notif
+
+== 1. Acesso ao Exercício ==
+
+A -> UI: 1.1 selecionarExercicio(exercicioId)
+activate UI
+
+UI -> CE: 1.2 acessarExercicio(exercicioId, token)
+activate CE
+
+CE -> Auth: 1.3 verificarToken(token)
+activate Auth
+Auth --> CE: 1.4 usuarioAutenticado
+deactivate Auth
+
+CE -> Perm: 1.5 verificarPapel(usuario, "ALUNO")
+activate Perm
+Perm --> CE: 1.6 permissaoValida
+deactivate Perm
+
+CE -> Repo: 1.7 buscarExercicio(exercicioId)
+activate Repo
+Repo -> DB: 1.8 SELECT * FROM conteudos WHERE id = ?
+DB --> Repo: 1.9 dadosExercicio
+Repo --> CE: 1.10 exercicioEncontrado
+deactivate Repo
+
+CE -> XP: 1.11 verificarNivelMinimo(alunoId, nivelRequisito)
+activate XP
+XP --> CE: 1.12 nivelSuficiente
+deactivate XP
+
+CE --> UI: 1.13 exibirExercicio(dados)
+UI --> A: 1.14 Apresenta enunciado e editor de código
+deactivate CE
+
+== 2. Submissão da Resposta ==
+
+A -> UI: 2.1 submeterResposta(codigo)
+activate UI
+UI -> CE: 2.2 corrigirExercicio(exercicioId, codigo, token)
+activate CE
+
+CE -> Auth: 2.3 verificarToken(token)
+activate Auth
+Auth --> CE: 2.4 usuarioAutenticado
+deactivate Auth
+
+CE -> Repo: 2.5 buscarGabarito(exercicioId)
+activate Repo
+Repo -> DB: 2.6 SELECT * FROM exercicios WHERE id = ?
+DB --> Repo: 2.7 gabarito
+Repo --> CE: 2.8 gabaritoEncontrado
+deactivate Repo
+
+CE -> CE: 2.9 executarCorrecao(codigo, gabarito)
+note right of CE: Valida sintaxe,\ntestes unitários\ne boas práticas
+
+alt Resposta Correta
+    CE -> XP: 2.10 calcularXPporDificuldade(dificuldade)
+    activate XP
+    XP --> CE: 2.11 xpGanho (10 a 50 XP)
+    deactivate XP
+    
+    CE -> Repo: 2.12 buscarAluno(alunoId)
+    activate Repo
+    Repo -> DB: 2.13 SELECT * FROM alunos WHERE id = ?
+    DB --> Repo: 2.14 dadosAluno
+    Repo --> CE: 2.15 alunoEncontrado
+    deactivate Repo
+    
+    CE -> XP: 2.16 somarXP(alunoId, xpGanho)
+    activate XP
+    XP -> Repo: 2.17 atualizarXPTotal(alunoId, novoXP)
+    activate Repo
+    Repo -> DB: 2.18 UPDATE alunos SET xp_total = ? WHERE id = ?
+    DB --> Repo: 2.19 atualizado
+    deactivate Repo
+    XP --> CE: 2.20 xpAtualizado
+    deactivate XP
+    
+    CE -> XP: 2.21 verificarLevelUp(alunoId)
+    activate XP
+    XP -> Repo: 2.22 buscarNivelAtual(alunoId)
+    activate Repo
+    Repo -> DB: 2.23 SELECT nivel FROM alunos WHERE id = ?
+    DB --> Repo: 2.24 nivelAtual
+    deactivate Repo
+    
+    alt XP >= 1000 * proximoNivel
+        XP -> Repo: 2.25 atualizarNivel(alunoId, novoNivel)
+        activate Repo
+        Repo -> DB: 2.26 UPDATE alunos SET nivel = ? WHERE id = ?
+        DB --> Repo: 2.27 nivelAtualizado
+        deactivate Repo
+        XP --> CE: 2.28 levelUpOcorrido(novoNivel)
+        
+        CE -> Notif: 2.29 dispararNotificacao(alunoId, "EVOLUCAO")
+        activate Notif
+        Notif -> Repo: 2.30 registrarNotificacao(dados)
+        activate Repo
+        Repo -> DB: 2.31 INSERT INTO notificacoes...
+        DB --> Repo: 2.32 registrado
+        deactivate Repo
+        Notif -> Notif: 2.33 formatarMensagem("Parabéns! Você subiu para o nível " + novoNivel)
+        Notif --> CE: 2.34 notificacaoEnviada
+        deactivate Notif
+    else Sem level up
+        XP --> CE: 2.35 semLevelUp
+    end
+    deactivate XP
+    
+    CE -> Repo: 2.36 registrarHistorico(alunoId, exercicioId, "CORRETO", xpGanho)
+    activate Repo
+    Repo -> DB: 2.37 INSERT INTO historico_exercicios...
+    DB --> Repo: 2.38 registrado
+    deactivate Repo
+    
+    CE --> UI: 2.39 resultadoCorreto(xpGanho, mensagem)
+    UI --> A: 2.40 ✅ "Resposta correta!\nVocê ganhou " + xpGanho + " XP"
+    
+else Resposta Incorreta
+    CE -> Repo: 2.41 registrarHistorico(alunoId, exercicioId, "INCORRETO", 0)
+    activate Repo
+    Repo -> DB: 2.42 INSERT INTO historico_exercicios...
+    DB --> Repo: 2.43 registrado
+    deactivate Repo
+    
+    CE --> UI: 2.44 resultadoIncorreto(dicas)
+    UI --> A: 2.45 ❌ "Resposta incorreta.\nTente novamente!\nDica: " + dica
+end
+
+deactivate CE
+deactivate UI
+
+== 3. Bônus por Streak (Opcional) ==
+
+opt Aluno tem streak >= 5 dias
+    CE -> XP: 3.1 verificarStreak(alunoId)
+    activate XP
+    XP -> Repo: 3.2 buscarStreakAtual(alunoId)
+    activate Repo
+    Repo -> DB: 3.3 SELECT streak FROM alunos WHERE id = ?
+    DB --> Repo: 3.4 streakDias
+    deactivate Repo
+    
+    alt streakDias >= 5 and streakDias < 10
+        XP --> CE: 3.5 bônusStreak(25)
+        CE -> Notif: 3.6 notificarBonusStreak(alunoId, 25)
+        activate Notif
+        Notif ->> A: 3.7 🔥 "Bônus de Streak!\n+25 XP por " + streakDias + " dias seguidos!"
+        deactivate Notif
+    else streakDias >= 10 and streakDias < 20
+        XP --> CE: 3.8 bônusStreak(100)
+    else streakDias >= 20
+        XP --> CE: 3.9 bônusStreak(250)
+    end
+    deactivate XP
+end
+
+@enduml
