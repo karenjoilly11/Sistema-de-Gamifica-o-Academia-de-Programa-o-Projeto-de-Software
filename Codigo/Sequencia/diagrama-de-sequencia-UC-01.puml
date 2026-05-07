@@ -1,0 +1,106 @@
+@startuml
+title DevLevel - Evoluir de Nível (UC-01)
+
+participant "Serviço de\nXP" as XP
+participant "Serviço de\nDesbloqueio" as Des
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+participant "Sistema de\nNotificação" as Notif
+actor Aluno as A
+
+== 1. Disparo de Verificação de Nível ==
+
+note right of XP: Disparado automático\napós qualquer ganho de XP
+
+XP -> Repo: 1.1 buscarAluno(alunoId)
+activate Repo
+Repo -> DB: 1.2 SELECT nivel, xp_total FROM alunos WHERE id = ?
+DB --> Repo: 1.3 dadosAluno
+Repo --> XP: 1.4 nivelAtual, xpTotal
+deactivate Repo
+
+XP -> XP: 1.5 calcularProximoNivel(nivelAtual)
+note right of XP: proximoNivelXP = nivelAtual * 1000
+
+alt xpTotal >= proximoNivelXP
+    XP -> XP: 1.6 nivelNovo = nivelAtual + 1
+    XP -> XP: 1.7 novoXP = xpTotal - (nivelAtual * 1000)
+    
+    XP -> Repo: 1.8 atualizarNivel(alunoId, nivelNovo, novoXP)
+    activate Repo
+    Repo -> DB: 1.9 UPDATE alunos SET nivel = ?, xp_total = ? WHERE id = ?
+    DB --> Repo: 1.10 atualizado
+    deactivate Repo
+    
+    XP -> Repo: 1.11 registrarHistoricoNivel(alunoId, nivelAtual, nivelNovo)
+    activate Repo
+    Repo -> DB: 1.12 INSERT INTO historico_niveis (aluno_id, nivel_antigo, nivel_novo, data)\nVALUES (?, ?, ?, NOW())
+    DB --> Repo: 1.13 registrado
+    deactivate Repo
+    
+    ' === Desbloqueio de Conteúdos ===
+    XP -> Des: 1.14 verificarNovosDesbloqueios(alunoId, nivelNovo)
+    activate Des
+    
+    Des -> Repo: 1.15 buscarConteudosPorNivel(nivelNovo)
+    activate Repo
+    Repo -> DB: 1.16 SELECT * FROM conteudos WHERE nivel_minimo = ?
+    DB --> Repo: 1.17 listaConteudos
+    Repo --> Des: 1.18 conteudosDesbloqueados
+    deactivate Repo
+    
+    alt conteudosDesbloqueados não vazios
+        loop Para cada conteúdo desbloqueado
+            Des -> Repo: 1.19 registrarDesbloqueio(alunoId, conteudoId)
+            activate Repo
+            Repo -> DB: 1.20 INSERT INTO conteudos_desbloqueados (aluno_id, conteudo_id, data)\nVALUES (?, ?, NOW())
+            DB --> Repo: 1.21 registrado
+            deactivate Repo
+        end
+        
+        Des -> Notif: 1.22 notificarDesbloqueios(alunoId, conteudosDesbloqueados)
+        activate Notif
+        Notif -> Notif: 1.23 formatarListaConteudos(conteudosDesbloqueados)
+        Notif ->> A: 1.24 🎁 "Novos conteúdos desbloqueados!\n" + listaConteudos
+        deactivate Notif
+    end
+    deactivate Des
+    
+    ' === Validação de Conquistas (Badges) ===
+    XP -> Repo: 1.25 buscarBadgesPorNivel(nivelNovo)
+    activate Repo
+    Repo -> DB: 1.26 SELECT * FROM badges WHERE tipo = 'NIVEL' AND requisito <= ?
+    DB --> Repo: 1.27 badgesDesbloqueadas
+    Repo --> XP: 1.28 badges
+    deactivate Repo
+    
+    alt badgesDesbloqueadas não vazias
+        loop Para cada badge
+            XP -> Repo: 1.29 concederBadge(alunoId, badgeId)
+            activate Repo
+            Repo -> DB: 1.30 INSERT INTO alunos_badges (aluno_id, badge_id, data_conquista)\nVALUES (?, ?, NOW())
+            DB --> Repo: 1.31 concedido
+            deactivate Repo
+        end
+        
+        XP -> Notif: 1.32 notificarBadges(alunoId, badgesDesbloqueadas)
+        activate Notif
+        Notif ->> A: 1.33 🏅 "Conquista desbloqueada!\n" + nomesBadges
+        deactivate Notif
+    end
+    
+    ' === Notificação Principal de Level Up ===
+    XP -> Notif: 1.34 notificarLevelUp(alunoId, nivelNovo, nivelAtual)
+    activate Notif
+    Notif -> Notif: 1.35 formatarMensagemLevelUp(nivelAtual, nivelNovo)
+    Notif ->> A: 1.36 🚀 "LEVEL UP!\nVocê subiu do nível " + nivelAtual + " para " + nivelNovo + "!\nContinue assim!"
+    deactivate Notif
+    
+    XP -->> A: 1.37 (Efeito visual na interface)
+    
+else Sem level up
+    XP -> XP: 1.38 nenhumaAcaoNecessaria
+    note right of XP: Nenhuma ação necessária\nAguardar próximo ganho de XP
+end
+
+@enduml
