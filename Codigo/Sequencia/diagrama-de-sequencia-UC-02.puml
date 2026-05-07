@@ -1,0 +1,150 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-02: Gerenciar Turmas
+
+actor Mentor as M
+participant "Interface\nWeb" as UI
+participant "Controlador\nTurma" as CT
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nPermissões" as Perm
+participant "Serviço de\nTurma" as ST
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Visualizar Turmas ==
+
+M -> UI: 1. acessarGerenciarTurmas()
+activate UI
+
+UI -> CT: 2. listarTurmas(token)
+activate CT
+
+CT -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CT: 4. usuarioAutenticado(mentorId)
+deactivate Auth
+
+CT -> Perm: 5. validarPermissao(mentorId, "MENTOR", "TURMA", "LISTAR")
+activate Perm
+Perm --> CT: 6. permissaoValida
+deactivate Perm
+
+CT -> Repo: 7. buscarTurmasPorMentor(mentorId)
+activate Repo
+Repo -> DB: 8. SELECT * FROM turmas\nWHERE mentor_id = ?\nORDER BY data_inicio DESC
+DB --> Repo: 9. listaTurmas
+Repo --> CT: 10. turmas
+deactivate Repo
+
+CT --> UI: 11. exibirTurmas(turmas)
+UI --> M: 12. 📋 Lista de turmas:\n- Turma A (15 alunos)\n- Turma B (12 alunos)
+deactivate CT
+
+== Fluxo - Visualizar Detalhes da Turma ==
+
+M -> UI: 13. selecionarTurma(turmaId)
+activate UI
+UI -> CT: 14. visualizarDetalhesTurma(turmaId, token)
+activate CT
+
+CT -> Auth: 15. validarToken(token)
+activate Auth
+Auth --> CT: 16. usuarioAutenticado
+deactivate Auth
+
+CT -> Perm: 17. validarPermissao(mentorId, "MENTOR", "TURMA", "VISUALIZAR")
+activate Perm
+Perm --> CT: 18. permissaoValida
+deactivate Perm
+
+CT -> ST: 19. buscarDetalhesCompletos(turmaId)
+activate ST
+
+ST -> Repo: 20. buscarDadosTurma(turmaId)
+activate Repo
+Repo -> DB: 21. SELECT * FROM turmas WHERE id = ?
+DB --> Repo: 22. dadosTurma
+Repo --> ST: 23. turma
+deactivate Repo
+
+ST -> Repo: 24. buscarAlunosDaTurma(turmaId)
+activate Repo
+Repo -> DB: 25. SELECT a.*, m.data_matricula, m.desempenho\nFROM alunos a\nJOIN matriculas m ON a.id = m.aluno_id\nWHERE m.turma_id = ?
+DB --> Repo: 26. listaAlunos
+Repo --> ST: 27. alunos
+deactivate Repo
+
+ST -> ST: 28. calcularEstatisticas(alunos)
+note right of ST: Média de XP\nDistribuição de níveis\nTaxa de conclusão
+
+ST --> CT: 29. detalhes(turma, alunos, estatisticas)
+deactivate ST
+
+CT --> UI: 30. exibirDetalhes(dados)
+UI --> M: 31. 📊 Detalhes da Turma A:\n15 alunos\nMédia XP: 3.450\nNível médio: 7
+deactivate CT
+
+== Fluxo - Adicionar Aluno à Turma ==
+
+M -> UI: 32. adicionarAluno(turmaId, emailAluno)
+activate UI
+UI -> CT: 33. adicionarAlunoNaTurma(turmaId, emailAluno, token)
+activate CT
+
+CT -> Auth: 34. validarToken(token)
+activate Auth
+Auth --> CT: 35. usuarioAutenticado
+deactivate Auth
+
+CT -> Perm: 36. validarPermissao(mentorId, "MENTOR", "TURMA", "EDITAR")
+activate Perm
+Perm --> CT: 37. permissaoValida
+deactivate Perm
+
+CT -> ST: 38. adicionarAluno(turmaId, emailAluno)
+activate ST
+
+ST -> Repo: 39. buscarAlunoPorEmail(emailAluno)
+activate Repo
+Repo -> DB: 40. SELECT * FROM alunos WHERE email = ?
+DB --> Repo: 41. alunoEncontrado
+Repo --> ST: 42. aluno
+deactivate Repo
+
+alt Aluno encontrado
+    ST -> Repo: 43. verificarMatriculaExistente(aluno.id, turmaId)
+    activate Repo
+    Repo -> DB: 44. SELECT * FROM matriculas\nWHERE aluno_id = ? AND turma_id = ?
+    DB --> Repo: 45. resultado
+    Repo --> ST: 46. jaMatriculado
+    deactivate Repo
+    
+    alt Ja matriculado
+        ST --> CT: 47. erro("Aluno já está na turma")
+        CT --> UI: 48. erro
+        UI --> M: 49. ⚠️ "Aluno já está matriculado nesta turma."
+        
+    else Não matriculado
+        ST -> Repo: 50. criarMatricula(aluno.id, turmaId)
+        activate Repo
+        Repo -> DB: 51. INSERT INTO matriculas\n(aluno_id, turma_id, data_matricula, desempenho, faltas)\nVALUES (?, ?, NOW(), 0, 0)
+        DB --> Repo: 52. matriculado
+        deactivate Repo
+        
+        ST --> CT: 53. sucesso(aluno.nome)
+        deactivate ST
+        
+        CT --> UI: 54. confirmacao()
+        UI --> M: 55. ✅ "Aluno " + aluno.nome + " adicionado com sucesso!"
+    end
+    
+else Aluno não encontrado
+    ST --> CT: 56. erro("Aluno não encontrado")
+    deactivate ST
+    CT --> UI: 57. erro
+    UI --> M: 58. ❌ "Aluno não encontrado. Verifique o email."
+end
+
+deactivate CT
+deactivate UI
+
+@enduml
