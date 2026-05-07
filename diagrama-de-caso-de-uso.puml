@@ -31,6 +31,8 @@ rectangle "DevLevel" {
   usecase "UC-13 - Notificar" as UC13
   usecase "UC-14 - Gerenciar Badges" as UC14
   usecase "UC-15 - Gerenciar Monitoria" as UC15
+  usecase "UC-16 - Validar Permissões" as UC16
+  usecase "UC-17 - Validar Desbloqueio" as UC17
   
   ' === Associações ator → caso de uso ===
   Aluno --> UC01
@@ -50,7 +52,8 @@ rectangle "DevLevel" {
   
   Usuario --> UC05
   
-  ' === Relacionamentos de include (autenticação obrigatória) ===
+  ' === Relacionamentos de include ===
+  ' Include de Autenticação
   UC01 ..> UC06 : <<include>>
   UC02 ..> UC06 : <<include>>
   UC03 ..> UC06 : <<include>>
@@ -63,12 +66,25 @@ rectangle "DevLevel" {
   UC11 ..> UC06 : <<include>>
   UC12 ..> UC06 : <<include>>
   UC14 ..> UC06 : <<include>>
-  UC15 ..> UC06 : <<include>>   
+  UC15 ..> UC06 : <<include>>
   
-  ' === Disparo de notificações (extend opcional) ===
-  UC01 <|-- UC13 : <<extend>>
-  UC12 <|-- UC13 : <<extend>>
- ' 
+  ' Include de Validação de Permissões
+  UC02 ..> UC16 : <<include>>
+  UC03 ..> UC16 : <<include>>
+  UC04 ..> UC16 : <<include>>
+  UC10 ..> UC16 : <<include>>
+  UC11 ..> UC16 : <<include>>
+  UC14 ..> UC16 : <<include>>
+  UC15 ..> UC16 : <<include>>
+  
+  ' === Relacionamentos de extend (opcionais) ===
+  ' Extend de Notificações
+  UC01 <.. UC13 : <<extend>>
+  UC12 <.. UC13 : <<extend>>
+  
+  ' Extend de Validação de Desbloqueio (NOVO)
+  UC08 <.. UC17 : <<extend>>
+  UC09 <.. UC17 : <<extend>>
 }
 
 @enduml
