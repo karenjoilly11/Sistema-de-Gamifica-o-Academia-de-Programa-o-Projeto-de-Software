@@ -1,0 +1,166 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-04: Gerenciar Conteúdos
+
+actor Administrador as Admin
+participant "Interface\nWeb" as UI
+participant "Controlador\nConteúdo" as CC
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nPermissões" as Perm
+participant "Serviço de\nConteúdo" as SC
+participant "Serviço de\nArmazenamento" as SA
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Visualizar Conteúdos ==
+
+Admin -> UI: 1. acessarGerenciarConteudos()
+activate UI
+
+UI -> CC: 2. listarConteudos(filtros, token)
+activate CC
+
+CC -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CC: 4. usuarioAutenticado(adminId)
+deactivate Auth
+
+CC -> Perm: 5. validarPermissao(adminId, "ADMIN", "CONTEUDO", "LISTAR")
+activate Perm
+Perm --> CC: 6. permissaoValida
+deactivate Perm
+
+CC -> Repo: 7. buscarConteudos(filtros)
+activate Repo
+Repo -> DB: 8. SELECT * FROM conteudos\nWHERE (:tipo IS NULL OR tipo = :tipo)\nAND (:trilha IS NULL OR trilha_associada = :trilha)\nORDER BY nivel_minimo, titulo
+DB --> Repo: 9. listaConteudos
+Repo --> CC: 10. conteudos
+deactivate Repo
+
+CC --> UI: 11. exibirConteudos(conteudos)
+UI --> Admin: 12. 📋 Lista de conteúdos:\n- Java Básico (Nível 1)\n- Spring Boot (Nível 5)\n- Microsserviços (Nível 20)
+deactivate CC
+
+== Fluxo - Criar Novo Conteúdo ==
+
+Admin -> UI: 13. criarConteudo()
+activate UI
+UI -> CC: 14. abrirFormularioCriacao()
+activate CC
+CC --> UI: 15. formulario
+UI --> Admin: 16. 📝 Formulário de criação\n(título, tipo, nível mínimo, trilha, arquivo)
+
+Admin -> UI: 17. preencherFormulario(dadosConteudo, arquivo)
+activate UI
+UI -> CC: 18. salvarConteudo(dadosConteudo, arquivo, token)
+activate CC
+
+CC -> Auth: 19. validarToken(token)
+activate Auth
+Auth --> CC: 20. usuarioAutenticado
+deactivate Auth
+
+CC -> Perm: 21. validarPermissao(adminId, "ADMIN", "CONTEUDO", "CRIAR")
+activate Perm
+Perm --> CC: 22. permissaoValida
+deactivate Perm
+
+CC -> SC: 23. criarConteudo(dadosConteudo, arquivo)
+activate SC
+
+SC -> SA: 24. salvarArquivo(arquivo, tipoConteudo)
+activate SA
+SA -> SA: 25. gerarUrlSegura(arquivo.hash)
+SA --> SC: 26. urlArquivo
+deactivate SA
+
+SC -> Repo: 27. inserirConteudo(dadosConteudo, urlArquivo)
+activate Repo
+Repo -> DB: 28. INSERT INTO conteudos\n(titulo, descricao, tipo, url_recurso, nivel_minimo, trilha_associada, duracao_estimada)\nVALUES (?, ?, ?, ?, ?, ?, ?)
+DB --> Repo: 29. idGerado
+Repo --> SC: 30. conteudoId
+deactivate Repo
+
+SC --> CC: 31. sucesso(conteudoId)
+deactivate SC
+
+CC --> UI: 32. confirmacao()
+UI --> Admin: 33. ✅ "Conteúdo criado com sucesso!\nID: " + conteudoId
+deactivate CC
+
+== Fluxo - Editar Conteúdo (Extend - Pré-visualizar) ==
+
+Admin -> UI: 34. selecionarConteudo(conteudoId, "EDITAR")
+activate UI
+UI -> CC: 35. editarConteudo(conteudoId, token)
+activate CC
+
+CC -> Auth: 36. validarToken(token)
+activate Auth
+Auth --> CC: 37. usuarioAutenticado
+deactivate Auth
+
+CC -> Repo: 38. buscarConteudo(conteudoId)
+activate Repo
+Repo -> DB: 39. SELECT * FROM conteudos WHERE id = ?
+DB --> Repo: 40. dadosConteudo
+Repo --> CC: 41. conteudo
+deactivate Repo
+
+CC --> UI: 42. exibirFormularioEdicao(conteudo)
+UI --> Admin: 43. 📝 Editar conteúdo\n(título, nível mínimo, trilha)
+
+opt Admin solicita pré-visualização
+    Admin -> UI: 44. solicitarPreVisualizacao()
+    activate UI
+    UI -> CC: 45. preVisualizarConteudo(conteudoId, token)
+    activate CC
+    
+    CC -> Perm: 46. validarPermissao(adminId, "ADMIN", "CONTEUDO", "PRE_VISUALIZAR")
+    activate Perm
+    Perm --> CC: 47. permissaoValida
+    deactivate Perm
+    
+    CC -> SC: 48. gerarPreVisualizacao(conteudoId)
+    activate SC
+    SC -> Repo: 49. buscarRecurso(conteudoId)
+    activate Repo
+    Repo -> DB: 50. SELECT url_recurso, tipo FROM conteudos WHERE id = ?
+    DB --> Repo: 51. recurso
+    deactivate Repo
+    SC -> SC: 52. formatarParaPreVisualizacao(recurso)
+    SC --> CC: 53. preview
+    deactivate SC
+    
+    CC --> UI: 54. retornarPreview(preview)
+    UI --> Admin: 55. 👁️ Pré-visualização do conteúdo
+    deactivate CC
+    deactivate UI
+end
+
+Admin -> UI: 56. salvarAlteracoes(novosDados)
+activate UI
+UI -> CC: 57. atualizarConteudo(conteudoId, novosDados, token)
+activate CC
+
+CC -> Auth: 58. validarToken(token)
+activate Auth
+Auth --> CC: 59. usuarioAutenticado
+deactivate Auth
+
+CC -> Perm: 60. validarPermissao(adminId, "ADMIN", "CONTEUDO", "EDITAR")
+activate Perm
+Perm --> CC: 61. permissaoValida
+deactivate Perm
+
+CC -> Repo: 62. atualizarConteudo(conteudoId, novosDados)
+activate Repo
+Repo -> DB: 63. UPDATE conteudos\nSET titulo = ?, nivel_minimo = ?, trilha_associada = ?\nWHERE id = ?
+DB --> Repo: 64. atualizado
+deactivate Repo
+
+CC --> UI: 65. confirmacao()
+UI --> Admin: 66. ✅ "Conteúdo atualizado com sucesso!"
+deactivate CC
+deactivate UI
+
+@enduml
