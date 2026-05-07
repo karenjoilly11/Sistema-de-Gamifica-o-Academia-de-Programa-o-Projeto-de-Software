@@ -1,0 +1,126 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-03: Gerenciar Conquistas
+
+actor Mentor as M
+participant "Interface\nWeb" as UI
+participant "Controlador\nConquista" as CC
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nPermissões" as Perm
+participant "Serviço de\nConquista" as SC
+participant "Serviço de\nXP" as XP
+participant "Serviço de\nNotificação" as Notif
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Visualizar Solicitações de Validação ==
+
+M -> UI: 1. acessarValidarConquistas()
+activate UI
+
+UI -> CC: 2. listarSolicitacoesPendentes(token)
+activate CC
+
+CC -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CC: 4. usuarioAutenticado(mentorId)
+deactivate Auth
+
+CC -> Perm: 5. validarPermissao(mentorId, "MENTOR", "CONQUISTA", "VALIDAR")
+activate Perm
+Perm --> CC: 6. permissaoValida
+deactivate Perm
+
+CC -> Repo: 7. buscarSolicitacoesConquistas(mentorId)
+activate Repo
+Repo -> DB: 8. SELECT sc.*, a.nome as aluno_nome, c.nome as conquista_nome\nFROM solicitacoes_conquistas sc\nJOIN alunos a ON sc.aluno_id = a.id\nJOIN conquistas c ON sc.conquista_id = c.id\nWHERE sc.mentor_id = ?\nAND sc.status = 'PENDENTE'
+DB --> Repo: 9. listaSolicitacoes
+Repo --> CC: 10. solicitacoes
+deactivate Repo
+
+CC --> UI: 11. exibirSolicitacoes(solicitacoes)
+UI --> M: 12. 📋 Solicitações pendentes:\n- João: Conquista "Mestre do Java"\n- Maria: Conquista "Bug Hunter"
+deactivate CC
+
+== Fluxo - Validar Conquista Manualmente ==
+
+M -> UI: 13. selecionarSolicitacao(solicitacaoId, "APROVAR", observacao)
+activate UI
+UI -> CC: 14. validarConquista(solicitacaoId, APROVAR, observacao, token)
+activate CC
+
+CC -> Auth: 15. validarToken(token)
+activate Auth
+Auth --> CC: 16. usuarioAutenticado
+deactivate Auth
+
+CC -> Perm: 17. validarPermissao(mentorId, "MENTOR", "CONQUISTA", "VALIDAR")
+activate Perm
+Perm --> CC: 18. permissaoValida
+deactivate Perm
+
+CC -> SC: 19. processarValidacao(solicitacaoId, acao, observacao)
+activate SC
+
+SC -> Repo: 20. buscarSolicitacao(solicitacaoId)
+activate Repo
+Repo -> DB: 21. SELECT * FROM solicitacoes_conquistas WHERE id = ?
+DB --> Repo: 22. dadosSolicitacao
+Repo --> SC: 23. solicitacao
+deactivate Repo
+
+alt solicitacao.status != "PENDENTE"
+    SC --> CC: 24. erro("Solicitação já processada")
+    CC --> UI: 25. erro
+    UI --> M: 26. ⚠️ "Esta solicitação já foi processada."
+
+else Solicitacao válida
+    SC -> Repo: 27. atualizarStatusSolicitacao(solicitacaoId, acao, observacao, mentorId)
+    activate Repo
+    Repo -> DB: 28. UPDATE solicitacoes_conquistas\nSET status = ?,\n    observacao = ?,\n    mentor_id = ?,\n    data_resposta = NOW()\nWHERE id = ?
+    DB --> Repo: 29. atualizado
+    deactivate Repo
+    
+    alt acao == "APROVAR"
+        ' === Conceder Badge ===
+        SC -> Repo: 30. concederBadge(alunoId, conquistaId)
+        activate Repo
+        Repo -> DB: 31. INSERT INTO alunos_badges\n(aluno_id, badge_id, data_conquista, validada_por)\nVALUES (?, ?, NOW(), ?)
+        DB --> Repo: 32. concedido
+        deactivate Repo
+        
+        ' === Conceder XP ===
+        SC -> XP: 33. adicionarXP(alunoId, xpConquista)
+        activate XP
+        XP --> SC: 34. xpAdicionado
+        deactivate XP
+        
+        SC -> SC: 35. mensagemAprovacao = "Sua conquista foi validada!"
+        
+    else acao == "REPROVAR"
+        SC -> SC: 36. mensagemReprovacao = "Sua conquista não foi validada.\nMotivo: " + observacao
+    end
+    
+    SC -> SC: 37. prepararNotificacao(mensagem, alunoId)
+    
+    ' === Disparar Notificação ===
+    SC -> Notif: 38. notificarAluno(alunoId, "VALIDACAO_CONQUISTA", mensagem)
+    activate Notif
+    Notif -> Notif: 39. formatarMensagem(mensagem)
+    Notif ->> Aluno: 40. 📧 mensagem
+    Notif -> Repo: 41. registrarNotificacao(alunoId, mensagem)
+    activate Repo
+    Repo -> DB: 42. INSERT INTO notificacoes...
+    deactivate Repo
+    deactivate Notif
+    
+    SC --> CC: 43. sucesso()
+    deactivate SC
+    
+    CC --> UI: 44. confirmacao()
+    UI --> M: 45. ✅ "Conquista validada com sucesso!\nAluno foi notificado."
+end
+
+deactivate CC
+deactivate UI
+
+@enduml
