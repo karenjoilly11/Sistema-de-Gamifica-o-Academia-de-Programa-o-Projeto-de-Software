@@ -1,0 +1,224 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-05: Gerenciar Perfil
+
+actor Usuario as U
+participant "Interface\nWeb" as UI
+participant "Controlador\nPerfil" as CP
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nPermissões" as Perm
+participant "Serviço de\nUsuario" as SUS
+participant "Serviço de\nArmazenamento" as SA
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Visualizar Perfil ==
+
+U -> UI: 1. acessarMeuPerfil()
+activate UI
+
+UI -> CP: 2. buscarPerfil(token)
+activate CP
+
+CP -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CP: 4. usuarioAutenticado(usuarioId)
+deactivate Auth
+
+CP -> Perm: 5. validarPermissao(usuarioId, null, "PERFIL", "VISUALIZAR")
+activate Perm
+Perm --> CP: 6. permissaoValida
+deactivate Perm
+
+CP -> Repo: 7. buscarDadosUsuario(usuarioId)
+activate Repo
+Repo -> DB: 8. SELECT id, nome, email, data_registro, status_conta, foto_perfil\nFROM usuarios WHERE id = ?
+DB --> Repo: 9. dadosUsuario
+Repo --> CP: 10. usuario
+deactivate Repo
+
+CP -> Repo: 11. buscarPapelUsuario(usuarioId)
+activate Repo
+Repo -> DB: 12. SELECT papel FROM usuarios WHERE id = ?
+DB --> Repo: 13. papel
+Repo --> CP: 14. perfil
+deactivate Repo
+
+CP --> UI: 15. exibirPerfil(usuario, papel)
+UI --> U: 16. 👤 Meu Perfil\nNome: " + usuario.nome + "\nEmail: " + usuario.email
+
+== Fluxo - Atualizar Perfil ==
+
+U -> UI: 17. editarPerfil()
+activate UI
+UI -> CP: 18. abrirFormularioEdicao(token)
+activate CP
+
+CP -> Auth: 19. validarToken(token)
+activate Auth
+Auth --> CP: 20. usuarioAutenticado
+deactivate Auth
+
+CP -> Repo: 21. buscarDadosUsuario(usuarioId)
+activate Repo
+Repo -> DB: 22. SELECT * FROM usuarios WHERE id = ?
+DB --> Repo: 23. dados
+deactivate Repo
+
+CP --> UI: 24. dadosAtuais
+UI --> U: 25. 📝 Formulário de edição\nNome: " + dados.nome + "\nEmail: " + dados.email
+
+U -> UI: 26. alterarNome(novoNome)
+U -> UI: 27. alterarEmail(novoEmail)
+
+U -> UI: 28. salvarAlteracoes()
+activate UI
+UI -> CP: 29. atualizarPerfil(dadosAtualizados, token)
+activate CP
+
+CP -> Auth: 30. validarToken(token)
+activate Auth
+Auth --> CP: 31. usuarioAutenticado
+deactivate Auth
+
+CP -> SUS: 32. validarEmailUnico(novoEmail, usuarioId)
+activate SUS
+SUS -> Repo: 33. verificarEmailExistente(novoEmail, usuarioId)
+activate Repo
+Repo -> DB: 34. SELECT id FROM usuarios WHERE email = ? AND id != ?
+DB --> Repo: 35. emailJaUsado
+Repo --> SUS: 36. resultado
+deactivate Repo
+SUS --> CP: 37. emailValido
+deactivate SUS
+
+alt Email já utilizado por outro usuário
+    CP --> UI: 38. erro("Email já está em uso")
+    UI --> U: 39. ❌ "Este email já está cadastrado por outro usuário."
+    
+else Email válido
+    CP -> Repo: 40. atualizarUsuario(usuarioId, dadosAtualizados)
+    activate Repo
+    Repo -> DB: 41. UPDATE usuarios\nSET nome = ?, email = ?\nWHERE id = ?
+    DB --> Repo: 42. atualizado
+    deactivate Repo
+    
+    CP --> UI: 43. sucesso()
+    UI --> U: 44. ✅ "Perfil atualizado com sucesso!"
+end
+
+deactivate CP
+
+== Fluxo - Alterar Senha ==
+
+U -> UI: 45. alterarSenha()
+activate UI
+UI -> CP: 46. solicitarAlteracaoSenha(token)
+activate CP
+
+CP -> Auth: 47. validarToken(token)
+activate Auth
+Auth --> CP: 48. usuarioAutenticado
+deactivate Auth
+
+CP --> UI: 49. formularioSenha
+UI --> U: 50. 🔒 Alterar senha\n(Senha atual, nova senha)
+
+U -> UI: 51. preencherSenhas(senhaAtual, novaSenha)
+activate UI
+UI -> CP: 52. alterarSenha(senhaAtual, novaSenha, token)
+activate CP
+
+CP -> Auth: 53. validarToken(token)
+activate Auth
+Auth --> CP: 54. usuarioAutenticado
+deactivate Auth
+
+CP -> SUS: 55. verificarSenhaAtual(usuarioId, senhaAtual)
+activate SUS
+SUS -> Repo: 56. buscarHashSenha(usuarioId)
+activate Repo
+Repo -> DB: 57. SELECT senha_hash FROM usuarios WHERE id = ?
+DB --> Repo: 58. hash
+deactivate Repo
+SUS -> SUS: 59. compararSenha(senhaAtual, hash)
+SUS --> CP: 60. senhaCorreta
+deactivate SUS
+
+alt Senha atual incorreta
+    CP --> UI: 61. erro("Senha atual incorreta")
+    UI --> U: 62. ❌ "Senha atual incorreta."
+    
+else Senha válida
+    CP -> SUS: 63. validarForcaSenha(novaSenha)
+    activate SUS
+    SUS -> SUS: 64. verificarRequisitos(novaSenha)\n(8+ caracteres, números, letras)
+    SUS --> CP: 65. senhaForte
+    deactivate SUS
+    
+    alt Senha fraca
+        CP --> UI: 66. erro("Senha muito fraca")
+        UI --> U: 67. ❌ "Senha muito fraca.\nUse pelo menos 8 caracteres,\nletras e números."
+        
+    else Senha forte
+        CP -> SUS: 68. atualizarSenha(usuarioId, novaSenha)
+        activate SUS
+        SUS -> SUS: 69. gerarHash(novaSenha)
+        SUS -> Repo: 70. salvarHashSenha(usuarioId, hash)
+        activate Repo
+        Repo -> DB: 71. UPDATE usuarios SET senha_hash = ? WHERE id = ?
+        DB --> Repo: 72. atualizado
+        deactivate Repo
+        SUS --> CP: 73. senhaAtualizada
+        deactivate SUS
+        
+        CP --> UI: 74. sucesso()
+        UI --> U: 75. ✅ "Senha alterada com sucesso!\nFaça login novamente."
+        
+        CP -> Auth: 76. invalidarTodosTokens(usuarioId)
+        activate Auth
+        Auth --> CP: 77. tokensInvalidados
+        deactivate Auth
+    end
+end
+
+deactivate CP
+
+== Fluxo - Solicitar Exclusão de Conta (Extend) ==
+
+opt Usuario solicita exclusão da conta
+    U -> UI: 78. solicitarExclusaoConta()
+    activate UI
+    UI -> CP: 79. solicitarExclusao(token)
+    activate CP
+    
+    CP -> Auth: 80. validarToken(token)
+    activate Auth
+    Auth --> CP: 81. usuarioAutenticado
+    deactivate Auth
+    
+    CP -> SUS: 82. iniciarProcessoExclusao(usuarioId)
+    activate SUS
+    
+    SUS -> SUS: 83. verificarCondicoesExclusao(usuarioId)
+    note right of SUS: Verificar pendências:\n- Saldo de DevCoins zerado?\n- Sem mentorias pendentes?
+    
+    SUS -> Repo: 84. criarRegistroExclusao(usuarioId)
+    activate Repo
+    Repo -> DB: 85. INSERT INTO solicitacoes_exclusao\n(usuario_id, solicitado_em, status, data_confirmacao)\nVALUES (?, NOW(), 'PENDENTE', NULL)
+    DB --> Repo: 86. registrado
+    deactivate Repo
+    
+    SUS -> SUS: 87. agendarExclusaoEm30Dias(usuarioId)
+    
+    SUS --> CP: 88. solicitationRegistrada
+    deactivate SUS
+    
+    CP --> UI: 89. confirmacao()
+    UI --> U: 90. 📧 "Solicitação de exclusão registrada.\nVocê receberá um email com o link de confirmação.\nSua conta será excluída em 30 dias caso não cancele."
+    deactivate CP
+    deactivate UI
+end
+
+deactivate UI
+
+@enduml
