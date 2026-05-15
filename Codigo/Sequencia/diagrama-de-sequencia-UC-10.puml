@@ -1,0 +1,236 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-10: Exportar Relatório
+
+actor Mentor as M
+participant "Interface\nWeb" as UI
+participant "Controlador\nRelatório" as CR
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nRelatório" as SR
+participant "Serviço de\nExportação" as SE
+participant "Serviço de\nNotificação" as Notif
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Acessar Relatórios ==
+
+M -> UI: 1. acessarRelatorios()
+activate UI
+
+UI -> CR: 2. listarRelatoriosDisponiveis(token)
+activate CR
+
+CR -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CR: 4. usuarioAutenticado(mentorId)
+deactivate Auth
+
+CR -> SR: 5. obterTiposRelatorioDisponiveis(mentorId)
+activate SR
+SR --> CR: 6. tiposRelatorio
+deactivate SR
+
+CR --> UI: 7. exibirOpcoesRelatorios(tiposRelatorio)
+UI --> M: 8. 📊 Opções de relatório:\n- Desempenho da Turma\n- Progresso Individual\n- Estatísticas de Gamificação\n- Relatório de Engajamento
+
+== Fluxo - Configurar e Gerar Relatório ==
+
+M -> UI: 9. selecionarTipoRelatorio(tipo, parametros)
+activate UI
+UI -> CR: 10. configurarRelatorio(tipo, parametros, token)
+activate CR
+
+CR -> Auth: 11. validarToken(token)
+activate Auth
+Auth --> CR: 12. usuarioAutenticado
+deactivate Auth
+
+CR -> SR: 13. validarParametrosRelatorio(tipo, parametros, mentorId)
+activate SR
+
+SR -> SR: 14. verificarPermissaoAcesso(mentorId, parametros.turmaId)
+
+alt Mentor não tem permissão para esta turma
+    SR --> CR: 15. erro("Acesso negado a esta turma")
+    CR --> UI: 16. erro
+    UI --> M: 17. ❌ "Você não tem permissão para acessar dados desta turma."
+    
+else Parâmetros válidos
+    SR --> CR: 18. parametrosValidos()
+    deactivate SR
+    
+    CR -> SR: 19. gerarRelatorio(tipo, parametros)
+    activate SR
+    
+    SR -> Repo: 20. buscarDadosParaRelatorio(tipo, parametros)
+    activate Repo
+    
+    alt tipo == "DESEMPENHO_TURMA"
+        Repo -> DB: 21. SELECT a.nome, a.nivel, a.xp_total,\n       m.desempenho, m.faltas,\n       COUNT(DISTINCT h.exercicio_id) as exercicios_resolvidos\nFROM alunos a\nJOIN matriculas m ON a.id = m.aluno_id\nLEFT JOIN historico_exercicios h ON a.id = h.aluno_id\nWHERE m.turma_id = :turmaId\nAND m.status = 'ATIVA'\nGROUP BY a.id, m.id
+        DB --> Repo: 22. dadosTurma
+        
+    else tipo == "PROGRESSO_INDIVIDUAL"
+        Repo -> DB: 23. SELECT a.nome, a.nivel, a.xp_total,\n       a.dev_coins, a.streak_atual,\n       (SELECT COUNT(*) FROM badges_conquistadas WHERE aluno_id = a.id) as total_badges,\n       (SELECT COUNT(*) FROM conteudos_desbloqueados WHERE aluno_id = a.id) as total_conteudos\nFROM alunos a\nWHERE a.id = :alunoId
+        DB --> Repo: 24. dadosAluno
+        
+        Repo -> DB: 25. SELECT data, xp_ganho, tipo_atividade\nFROM historico_atividades\nWHERE aluno_id = :alunoId\nAND data BETWEEN :dataInicio AND :dataFim\nORDER BY data
+        DB --> Repo: 26. historicoAtividades
+        
+    else tipo == "ESTATISTICAS_GAMIFICACAO"
+        Repo -> DB: 27. SELECT \n    AVG(a.nivel) as media_nivel,\n    AVG(a.xp_total) as media_xp,\n    AVG(a.dev_coins) as media_devcoins,\n    AVG(a.streak_atual) as media_streak,\n    COUNT(CASE WHEN a.streak_atual >= 30 THEN 1 END) as alunos_streak_30,\n    COUNT(DISTINCT h.aluno_id) as alunos_ativos_mes\nFROM alunos a\nLEFT JOIN historico_atividades h ON a.id = h.aluno_id\nWHERE h.data >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        DB --> Repo: 28. estatisticas
+        
+    else tipo == "ENGAJAMENTO"
+        Repo -> DB: 29. SELECT \n    DATE(data) as dia,\n    COUNT(DISTINCT aluno_id) as alunos_ativos,\n    SUM(xp_ganho) as xp_total_dia,\n    COUNT(*) as total_atividades\nFROM historico_atividades\nWHERE data BETWEEN :dataInicio AND :dataFim\nGROUP BY DATE(data)\nORDER BY dia
+        DB --> Repo: 30. dadosEngajamento
+    end
+    
+    Repo --> SR: 31. dadosColetados
+    deactivate Repo
+    
+    SR -> SR: 32. processarDados(dados, tipo)
+    note right of SR: Calcular médias,\npercentuais,\ntendências
+    
+    SR -> SE: 33. formatarRelatorio(dadosProcessados, formato)
+    activate SE
+    
+    alt formato == "PDF"
+        SE -> SE: 34. gerarPDF(dados, template)
+        note right of SE: Aplicar estilos,\nlogo, cabeçalho
+        
+    else formato == "CSV"
+        SE -> SE: 35. gerarCSV(dados)
+        note right of SE: Converter para\nformato tabular
+        
+    else formato == "EXCEL"
+        SE -> SE: 36. gerarExcel(dados)
+        note right of SE: Criar abas,\nformatação condicional
+    end
+    
+    SE --> SR: 37. arquivoGerado(nomeArquivo, tamanho, url)
+    deactivate SE
+    
+    SR --> CR: 38. relatorioGerado(dadosRelatorio, arquivo)
+    deactivate SR
+    
+    CR --> UI: 39. apresentarRelatorio(dadosRelatorio, preview)
+    UI --> M: 40. 📈 Relatório gerado!\nVisualização prévia...
+    
+    == Fluxo - Exportar e Download ==
+    
+    M -> UI: 41. selecionarFormatoExportacao(formato)
+    activate UI
+    UI -> CR: 42. exportarRelatorio(relatorioId, formato, token)
+    activate CR
+    
+    CR -> Auth: 43. validarToken(token)
+    activate Auth
+    Auth --> CR: 44. usuarioAutenticado
+    deactivate Auth
+    
+    CR -> SR: 45. gerarArquivoExportacao(relatorioId, formato)
+    activate SR
+    
+    SR -> SE: 46. renderizarRelatorio(relatorioId, formato)
+    activate SE
+    SE --> SR: 47. urlDownload
+    deactivate SE
+    
+    SR -> Repo: 48. registrarExportacao(mentorId, relatorioId, formato, tamanho)
+    activate Repo
+    Repo -> DB: 49. INSERT INTO exportacoes_relatorios\n(mentor_id, relatorio_id, formato, tamanho, data_exportacao, url_download)\nVALUES (?, ?, ?, ?, NOW(), ?)
+    DB --> Repo: 50. registrado
+    deactivate Repo
+    
+    SR --> CR: 51. urlDownload
+    deactivate SR
+    
+    CR --> UI: 52. urlDownload()
+    UI --> M: 53. 📎 "Relatório exportado com sucesso!\nTamanho: " + tamanhoFormatado + "\nClique para baixar"
+    
+    ' === Notificação opcional (extend) ===
+    opt Mentor solicita notificação por email
+        M -> UI: 54. enviarNotificacaoEmail()
+        activate UI
+        UI -> CR: 55. notificarExportacao(email, urlDownload, token)
+        activate CR
+        
+        CR -> Auth: 56. validarToken(token)
+        activate Auth
+        Auth --> CR: 57. usuarioAutenticado
+        deactivate Auth
+        
+        CR -> Notif: 58. enviarEmailRelatorio(email, urlDownload, tipoRelatorio)
+        activate Notif
+        
+        Notif -> Notif: 59. montarEmail(tipoRelatorio, urlDownload, dataGeracao)
+        
+        Notif -> Notif: 60. enviar(email, assunto, corpo)
+        
+        Notif --> CR: 61. emailEnviado
+        deactivate Notif
+        
+        CR --> UI: 62. confirmacao()
+        UI --> M: 63. 📧 "Relatório enviado por email!"
+        deactivate CR
+        deactivate UI
+    end
+end
+
+deactivate CR
+deactivate UI
+
+== Fluxo Alternativo - Relatórios Agendados ==
+
+M -> UI: 64. acessarAgendamentos()
+activate UI
+UI -> CR: 65. listarAgendamentos(token)
+activate CR
+
+CR -> Auth: 66. validarToken(token)
+activate Auth
+Auth --> CR: 67. usuarioAutenticado
+deactivate Auth
+
+CR -> SR: 68. buscarAgendamentos(mentorId)
+activate SR
+SR -> Repo: 69. SELECT * FROM agendamentos_relatorios\nWHERE mentor_id = ?\nORDER BY proxima_execucao
+activate Repo
+Repo -> DB: 70. consulta
+DB --> Repo: 71. agendamentos
+deactivate Repo
+SR --> CR: 72. listaAgendamentos
+deactivate SR
+
+CR --> UI: 73. exibirAgendamentos(listaAgendamentos)
+UI --> M: 74. 📅 Relatórios agendados:\n- Relatório Semanal (Domingo, formato PDF)\n- Relatório Mensal (Dia 1, formato EXCEL)
+
+M -> UI: 75. criarAgendamento(tipoRelatorio, periodicidade, formato, emailDestino)
+activate UI
+UI -> CR: 76. salvarAgendamento(dadosAgendamento, token)
+activate CR
+
+CR -> Auth: 77. validarToken(token)
+activate Auth
+Auth --> CR: 78. usuarioAutenticado
+deactivate Auth
+
+CR -> SR: 79. criarAgendamento(mentorId, dadosAgendamento)
+activate SR
+
+SR -> SR: 80. validarPeriodicidade(periodicidade)
+
+SR -> Repo: 81. inserirAgendamento(mentorId, dadosAgendamento)
+activate Repo
+Repo -> DB: 82. INSERT INTO agendamentos_relatorios\n(mentor_id, tipo_relatorio, periodicidade, formato, email_destino, proxima_execucao, ativo)\nVALUES (?, ?, ?, ?, ?, :proximaExecucao, true)
+DB --> Repo: 83. agendamentoId
+deactivate Repo
+
+SR --> CR: 84. sucesso(agendamentoId)
+deactivate SR
+
+CR --> UI: 85. confirmacao()
+UI --> M: 86. ✅ "Relatório agendado com sucesso!\nVocê receberá no email " + emailDestino
+deactivate CR
+deactivate UI
+
+@enduml
