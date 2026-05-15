@@ -1,0 +1,186 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-14: Gerenciar Badges
+
+actor Administrador as Admin
+participant "Interface\nWeb" as UI
+participant "Controlador\nBadge" as CB
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nBadge" as SB
+participant "Serviço de\nArmazenamento" as SA
+participant "Serviço de\nNotificação" as Notif
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Visualizar Badges ==
+
+Admin -> UI: 1. acessarGerenciarBadges()
+activate UI
+
+UI -> CB: 2. listarBadges(filtros, token)
+activate CB
+
+CB -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CB: 4. usuarioAutenticado(adminId)
+deactivate Auth
+
+CB -> Repo: 5. buscarBadges(filtros)
+activate Repo
+Repo -> DB: 6. SELECT b.*,\n       COUNT(DISTINCT ab.aluno_id) as total_concedidas\nFROM badges b\nLEFT JOIN alunos_badges ab ON b.id = ab.badge_id\nWHERE (:tipo IS NULL OR b.tipo = :tipo)\n  AND (:status IS NULL OR b.status = :status)\nGROUP BY b.id\nORDER BY b.tipo, b.nome
+DB --> Repo: 7. listaBadges
+Repo --> CB: 8. badges
+deactivate Repo
+
+CB --> UI: 9. exibirBadges(badges)
+UI --> Admin: 10. 🏅 Gerenciar Badges:\n\nNÍVEL (3 badges)\n- Iniciante (50 alunos)\n- Intermediário (23 alunos)\n- Expert (5 alunos)\n\nCONQUISTA (5 badges)\n- Bug Hunter (12 alunos)\n- Maratona (8 alunos)\n...
+deactivate CB
+
+== Fluxo - Criar Novo Badge ==
+
+Admin -> UI: 11. criarBadge()
+activate UI
+UI -> CB: 12. abrirFormularioCriacao(token)
+activate CB
+
+CB -> Auth: 13. validarToken(token)
+activate Auth
+Auth --> CB: 14. usuarioAutenticado
+deactivate Auth
+
+CB --> UI: 15. formularioVazio()
+UI --> Admin: 16. 📝 Novo Badge:\nNome: ___________\nDescrição: ___________\nTipo: [NÍVEL/CONQUISTA]\nCritério: ___________\nXP de concessão: ___\nÍcone: [upload]
+
+Admin -> UI: 17. preencherFormulario(dadosBadge, iconeArquivo)
+activate UI
+UI -> CB: 18. salvarBadge(dadosBadge, iconeArquivo, token)
+activate CB
+
+CB -> Auth: 19. validarToken(token)
+activate Auth
+Auth --> CB: 20. usuarioAutenticado
+deactivate Auth
+
+CB -> SB: 21. criarBadge(dadosBadge, iconeArquivo, adminId)
+activate SB
+
+SB -> SB: 22. validarDadosBadge(dadosBadge)
+note right of SB: Verificar:\n- Nome único\n- Critério válido\n- XP entre 50 e 1000
+
+alt Dados inválidos
+    SB --> CB: 23. erro(motivo)
+    CB --> UI: 24. erro
+    UI --> Admin: 25. ❌ "Erro ao criar badge: " + motivo
+    
+else Dados válidos
+    SB -> SA: 26. salvarIcone(iconeArquivo, "badges")
+    activate SA
+    SA -> SA: 27. gerarNomeUnico(iconeArquivo)
+    SA -> SA: 28. otimizarImagem(iconeArquivo, 128, 128)
+    SA --> SB: 29. urlIcone
+    deactivate SA
+    
+    SB -> Repo: 30. inserirBadge(dadosBadge, urlIcone)
+    activate Repo
+    Repo -> DB: 31. INSERT INTO badges\n(nome, descricao, tipo, criterio, xp_concessao, icone_url, criado_por, data_criacao, status)\nVALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 'ATIVA')
+    DB --> Repo: 32. badgeId
+    deactivate Repo
+    
+    SB -> Repo: 33. registrarLog(adminId, "CRIAR_BADGE", badgeId, dadosBadge)
+    activate Repo
+    Repo -> DB: 34. INSERT INTO logs_badges\n(admin_id, acao, badge_id, detalhes, data)\nVALUES (?, ?, ?, ?, NOW())
+    deactivate Repo
+    
+    SB --> CB: 35. sucesso(badgeId)
+    deactivate SB
+    
+    CB --> UI: 36. confirmacao()
+    UI --> Admin: 37. ✅ "Badge '" + nomeBadge + "' criado com sucesso!"
+end
+
+deactivate CB
+deactivate UI
+
+== Fluxo - Editar Badge ==
+
+Admin -> UI: 38. selecionarBadge(badgeId)
+activate UI
+UI -> CB: 39. buscarBadge(badgeId, token)
+activate CB
+
+CB -> Auth: 40. validarToken(token)
+activate Auth
+Auth --> CB: 41. usuarioAutenticado
+deactivate Auth
+
+CB -> Repo: 42. buscarBadgePorId(badgeId)
+activate Repo
+Repo -> DB: 43. SELECT * FROM badges WHERE id = ?
+DB --> Repo: 44. dadosBadge
+Repo --> CB: 45. badge
+deactivate Repo
+
+CB --> UI: 46. exibirFormularioEdicao(badge)
+UI --> Admin: 47. ✏️ Editando Badge:\nNome: " + badge.nome + "\nDescrição: " + badge.descricao + "\nXP concessão: " + badge.xpConcessao
+
+Admin -> UI: 48. alterarDados(novosDados, novoIcone)
+activate UI
+UI -> CB: 49. atualizarBadge(badgeId, novosDados, novoIcone, token)
+activate CB
+
+CB -> Auth: 50. validarToken(token)
+activate Auth
+Auth --> CB: 51. usuarioAutenticado
+deactivate Auth
+
+CB -> SB: 52. atualizarBadge(badgeId, novosDados, novoIcone, adminId)
+activate SB
+
+opt novoIcone fornecido
+    SB -> SA: 53. substituirIcone(badgeId, novoIcone)
+    activate SA
+    SA -> SA: 54. deletarIconeAntigo(badgeId)
+    SA -> SA: 55. salvarNovoIcone(novoIcone)
+    SA --> SB: 56. novaUrlIcone
+    deactivate SA
+end
+
+SB -> Repo: 57. atualizarBadge(badgeId, novosDados, novaUrlIcone)
+activate Repo
+Repo -> DB: 58. UPDATE badges\nSET nome = ?, descricao = ?, criterio = ?,\n    xp_concessao = ?, icone_url = COALESCE(?, icone_url)\nWHERE id = ?
+DB --> Repo: 59. atualizado
+deactivate Repo
+
+SB -> Repo: 60. registrarLog(adminId, "EDITAR_BADGE", badgeId, novosDados)
+activate Repo
+Repo -> DB: 61. INSERT INTO logs_badges...
+deactivate Repo
+
+SB --> CB: 62. sucesso()
+deactivate SB
+
+CB --> UI: 63. confirmacao()
+UI --> Admin: 64. ✅ "Badge atualizado com sucesso!"
+deactivate CB
+deactivate UI
+
+== Fluxo - Desativar/Ativar Badge ==
+
+Admin -> UI: 65. selecionarBadge(badgeId)
+activate UI
+UI -> CB: 66. buscarBadge(badgeId, token)
+activate CB
+
+CB -> Auth: 67. validarToken(token)
+activate Auth
+Auth --> CB: 68. usuarioAutenticado
+deactivate Auth
+
+CB -> Repo: 69. buscarBadgeComEstatisticas(badgeId)
+activate Repo
+Repo -> DB: 70. SELECT b.*,\n       COUNT(ab.aluno_id) as total_concedidas,\n       COUNT(CASE WHEN ab.data_conquista > DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as ultimos_30_dias\nFROM badges b\nLEFT JOIN alunos_badges ab ON b.id = ab.badge_id\nWHERE b.id = ?\nGROUP BY b.id
+DB --> Repo: 71. dadosBadge
+Repo --> CB: 72. badge
+deactivate Repo
+
+CB --> UI: 73. exibirDetalhesBadge(badge)
+UI --> Admin: 74. 📊 Detalhes do Badge:\nConcedido a " + badge.totalConcedidas + " alunos\n" + badge
