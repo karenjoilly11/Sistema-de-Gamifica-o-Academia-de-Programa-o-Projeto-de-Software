@@ -1,0 +1,293 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-11: Gerenciar Fórum
+
+actor Administrador as Admin
+participant "Interface\nWeb" as UI
+participant "Controlador\nFórum" as CF
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nModeração" as Mod
+participant "Serviço de\nNotificação" as Notif
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+
+== Fluxo Principal - Visualizar Conteúdo do Fórum ==
+
+Admin -> UI: 1. acessarPainelFórum()
+activate UI
+
+UI -> CF: 2. listarConteudoForum(filtros, token)
+activate CF
+
+CF -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CF: 4. usuarioAutenticado(adminId)
+deactivate Auth
+
+CF -> Mod: 5. verificarPermissaoModeracao(adminId)
+activate Mod
+Mod --> CF: 6. permissaoModeracao(true)
+deactivate Mod
+
+CF -> Repo: 7. buscarConteudoForum(filtros)
+activate Repo
+Repo -> DB: 8. (\n    SELECT 'pergunta' as tipo, id, titulo as titulo,\n           conteudo, autor_id, data_criacao, status, denuncias\n    FROM perguntas_forum\n    WHERE (:status IS NULL OR status = :status)\n      AND (:temDenuncias IS NULL OR denuncias > 0)\n    UNION ALL\n    SELECT 'resposta' as tipo, id, NULL as titulo,\n           conteudo, autor_id, data_criacao, status, denuncias\n    FROM respostas_forum\n    WHERE (:status IS NULL OR status = :status)\n      AND (:temDenuncias IS NULL OR denuncias > 0)\n) ORDER BY denuncias DESC, data_criacao DESC\nLIMIT 50
+DB --> Repo: 9. listaConteudo
+Repo --> CF: 10. conteudos
+deactivate Repo
+
+CF --> UI: 11. exibirConteudoForum(conteudos)
+UI --> Admin: 12. 📋 Conteúdo do Fórum:\n- "Como fazer loop?" (2 denúncias)\n- "Dúvida sobre SQL" (1 denúncia)\n- "Resposta incorreta" (3 denúncias)
+deactivate CF
+
+== Fluxo - Moderar Pergunta ==
+
+Admin -> UI: 13. selecionarPergunta(perguntaId)
+activate UI
+UI -> CF: 14. buscarPergunta(perguntaId, token)
+activate CF
+
+CF -> Auth: 15. validarToken(token)
+activate Auth
+Auth --> CF: 16. usuarioAutenticado
+deactivate Auth
+
+CF -> Repo: 17. buscarPerguntaCompleta(perguntaId)
+activate Repo
+Repo -> DB: 18. SELECT p.*, a.nome as autor_nome, a.email as autor_email\nFROM perguntas_forum p\nJOIN alunos a ON p.autor_id = a.id\nWHERE p.id = ?
+DB --> Repo: 19. pergunta
+Repo --> CF: 20. dadosPergunta
+deactivate Repo
+
+CF --> UI: 21. exibirDetalhesPergunta(dadosPergunta)
+UI --> Admin: 22. ❓ Pergunta de " + autorNome + "\n\n" + pergunta.conteudo + "\n\nDenúncias: " + pergunta.denuncias
+
+== Fluxo - Ações de Moderação ==
+
+Admin -> UI: 23. selecionarAcaoModeracao(acao, motivo)
+activate UI
+
+alt acao == "EXCLUIR"
+    UI -> CF: 24. excluirPergunta(perguntaId, motivo, token)
+    activate CF
+    
+    CF -> Auth: 25. validarToken(token)
+    activate Auth
+    Auth --> CF: 26. usuarioAutenticado
+    deactivate Auth
+    
+    CF -> Mod: 27. excluirConteudo("PERGUNTA", perguntaId, adminId, motivo)
+    activate Mod
+    
+    Mod -> Repo: 28. buscarAutoresRelacionados(perguntaId)
+    activate Repo
+    Repo -> DB: 29. SELECT autor_id FROM perguntas_forum WHERE id = ?\nUNION\nSELECT autor_id FROM respostas_forum WHERE pergunta_id = ?
+    DB --> Repo: 30. listaAutores
+    deactivate Repo
+    
+    Mod -> Repo: 31. removerPergunta(perguntaId)
+    activate Repo
+    Repo -> DB: 32. DELETE FROM respostas_forum WHERE pergunta_id = ?\nDELETE FROM perguntas_forum WHERE id = ?
+    DB --> Repo: 33. removido
+    deactivate Repo
+    
+    Mod -> Repo: 34. registrarLogModeracao(adminId, "EXCLUIR_PERGUNTA", perguntaId, motivo)
+    activate Repo
+    Repo -> DB: 35. INSERT INTO logs_moderacao\n(admin_id, acao, conteudo_id, tipo_conteudo, motivo, data)\nVALUES (?, ?, ?, ?, ?, NOW())
+    deactivate Repo
+    
+    ' === Notificar autor ===
+    Mod -> Notif: 36. notificarAutorExclusao(autorId, motivo, "PERGUNTA")
+    activate Notif
+    Notif -> Notif: 37. montarMensagem("Sua pergunta foi removida por violar as regras.\nMotivo: " + motivo)
+    Notif ->> Autor: 38. 📧 "Sua pergunta foi removida do fórum."
+    deactivate Notif
+    
+    Mod --> CF: 39. sucesso()
+    deactivate Mod
+    
+    CF --> UI: 40. confirmacao()
+    UI --> Admin: 41. ✅ "Pergunta excluída com sucesso!\nAutor notificado."
+    
+else acao == "EDITAR"
+    UI -> CF: 42. editarPergunta(perguntaId, novoConteudo, token)
+    activate CF
+    
+    CF -> Auth: 43. validarToken(token)
+    activate Auth
+    Auth --> CF: 44. usuarioAutenticado
+    deactivate Auth
+    
+    CF -> Mod: 45. editarConteudo("PERGUNTA", perguntaId, novoConteudo, adminId)
+    activate Mod
+    
+    Mod -> Repo: 46. atualizarConteudo(perguntaId, novoConteudo)
+    activate Repo
+    Repo -> DB: 47. UPDATE perguntas_forum\nSET conteudo = ?, editado_por_admin = true, data_edicao = NOW()\nWHERE id = ?
+    DB --> Repo: 48. atualizado
+    deactivate Repo
+    
+    Mod -> Repo: 49. registrarLogModeracao(adminId, "EDITAR_PERGUNTA", perguntaId, "Conteúdo editado")
+    activate Repo
+    Repo -> DB: 50. INSERT INTO logs_moderacao...
+    deactivate Repo
+    
+    Mod --> CF: 51. sucesso()
+    deactivate Mod
+    
+    CF --> UI: 52. confirmacao()
+    UI --> Admin: 53. ✅ "Pergunta editada com sucesso!"
+    
+else acao == "BLOQUEAR_AUTOR"
+    UI -> CF: 54. bloquearAutor(autorId, motivo, duracao, token)
+    activate CF
+    
+    CF -> Auth: 55. validarToken(token)
+    activate Auth
+    Auth --> CF: 56. usuarioAutenticado
+    deactivate Auth
+    
+    CF -> Mod: 57. bloquearUsuarioForum(autorId, adminId, motivo, duracao)
+    activate Mod
+    
+    Mod -> Repo: 58. verificarStatusUsuario(autorId)
+    activate Repo
+    Repo -> DB: 59. SELECT status_forum FROM usuarios WHERE id = ?
+    DB --> Repo: 60. statusAtual
+    deactivate Repo
+    
+    alt statusAtual != "NORMAL"
+        Mod --> CF: 61. erro("Usuário já está bloqueado")
+        CF --> UI: 62. erro
+        UI --> Admin: 63. ⚠️ "Este usuário já está bloqueado ou suspenso."
+        
+    else Usuário normal
+        Mod -> Repo: 64. atualizarStatusForum(autorId, "BLOQUEADO", motivo, duracao)
+        activate Repo
+        Repo -> DB: 65. UPDATE usuarios\nSET status_forum = 'BLOQUEADO',\n    motivo_bloqueio = ?,\n    bloqueio_ate = DATE_ADD(NOW(), INTERVAL :duracao)\nWHERE id = ?
+        DB --> Repo: 66. atualizado
+        deactivate Repo
+        
+        Mod -> Repo: 67. removerConteudoUsuario(autorId)
+        activate Repo
+        Repo -> DB: 68. UPDATE perguntas_forum SET status = 'REMOVIDO' WHERE autor_id = ?\nUPDATE respostas_forum SET status = 'REMOVIDO' WHERE autor_id = ?
+        deactivate Repo
+        
+        Mod -> Repo: 69. registrarLogModeracao(adminId, "BLOQUEAR_AUTOR", autorId, motivo)
+        activate Repo
+        Repo -> DB: 70. INSERT INTO logs_moderacao...
+        deactivate Repo
+        
+        ' === Notificar autor bloqueado ===
+        Mod -> Notif: 71. notificarBloqueio(autorId, motivo, duracao)
+        activate Notif
+        Notif -> Notif: 72. montarMensagem("Você foi bloqueado do fórum até " + dataBloqueio + "\nMotivo: " + motivo)
+        Notif ->> Autor: 73. 📧 "Aviso de bloqueio - Fórum DevLevel"
+        deactivate Notif
+        
+        Mod --> CF: 74. sucesso()
+        deactivate Mod
+        
+        CF --> UI: 75. confirmacao()
+        UI --> Admin: 76. ✅ "Usuário bloqueado com sucesso!\nTodo seu conteúdo foi removido."
+    end
+    
+else acao == "REABILITAR_AUTOR"
+    UI -> CF: 77. reabilitarAutor(autorId, token)
+    activate CF
+    
+    CF -> Auth: 78. validarToken(token)
+    activate Auth
+    Auth --> CF: 79. usuarioAutenticado
+    deactivate Auth
+    
+    CF -> Mod: 80. reabilitarUsuarioForum(autorId, adminId)
+    activate Mod
+    
+    Mod -> Repo: 81. atualizarStatusForum(autorId, "NORMAL", NULL, NULL)
+    activate Repo
+    Repo -> DB: 82. UPDATE usuarios\nSET status_forum = 'NORMAL',\n    motivo_bloqueio = NULL,\n    bloqueio_ate = NULL\nWHERE id = ?
+    deactivate Repo
+    
+    Mod -> Repo: 83. registrarLogModeracao(adminId, "REABILITAR_AUTOR", autorId, "Usuário reabilitado")
+    activate Repo
+    Repo -> DB: 84. INSERT INTO logs_moderacao...
+    deactivate Repo
+    
+    ' === Notificar autor reabilitado ===
+    Mod -> Notif: 85. notificarReabilitacao(autorId)
+    activate Notif
+    Notif ->> Autor: 86. 📧 "Seu acesso ao fórum foi reestabelecido!"
+    deactivate Notif
+    
+    Mod --> CF: 87. sucesso()
+    deactivate Mod
+    
+    CF --> UI: 88. confirmacao()
+    UI --> Admin: 89. ✅ "Usuário reabilitado com sucesso!"
+end
+
+deactivate CF
+deactivate UI
+
+== Fluxo - Configurar Regras do Fórum ==
+
+Admin -> UI: 90. acessarConfiguracoesForum()
+activate UI
+UI -> CF: 91. buscarConfiguracoes(token)
+activate CF
+
+CF -> Auth: 92. validarToken(token)
+activate Auth
+Auth --> CF: 93. usuarioAutenticado
+deactivate Auth
+
+CF -> Repo: 94. buscarConfiguracoesForum()
+activate Repo
+Repo -> DB: 95. SELECT * FROM configuracoes_forum LIMIT 1
+DB --> Repo: 96. configuracoes
+Repo --> CF: 97. dadosConfiguracoes
+deactivate Repo
+
+CF --> UI: 98. exibirConfiguracoes(dadosConfiguracoes)
+UI --> Admin: 99. ⚙️ Configurações do Fórum:\n- Aprovação prévia: Desligada\n- Limite denúncias: 5\n- Bloqueio automático: Sim\n- Dias retenção logs: 30
+
+Admin -> UI: 100. alterarConfiguracao(chave, valor)
+activate UI
+UI -> CF: 101. atualizarConfiguracao(chave, valor, token)
+activate CF
+
+CF -> Auth: 102. validarToken(token)
+activate Auth
+Auth --> CF: 103. usuarioAutenticado
+deactivate Auth
+
+CF -> Mod: 104. validarConfiguracao(chave, valor)
+activate Mod
+
+alt Configuração inválida
+    Mod --> CF: 105. erro("Valor inválido para " + chave)
+    CF --> UI: 106. erro
+    UI --> Admin: 107. ❌ "Valor inválido. O valor deve ser entre " + min + " e " + max
+    
+else Configuração válida
+    Mod -> Repo: 108. atualizarConfiguracao(chave, valor)
+    activate Repo
+    Repo -> DB: 109. UPDATE configuracoes_forum SET valor = ? WHERE chave = ?
+    deactivate Repo
+    
+    Mod -> Repo: 110. registrarLogConfiguracao(adminId, chave, valor, valorAntigo)
+    activate Repo
+    Repo -> DB: 111. INSERT INTO logs_configuracoes\n(admin_id, chave, valor_antigo, valor_novo, data)\nVALUES (?, ?, ?, ?, NOW())
+    deactivate Repo
+    
+    Mod --> CF: 112. sucesso()
+    deactivate Mod
+    
+    CF --> UI: 113. confirmacao()
+    UI --> Admin: 114. ✅ "Configuração atualizada com sucesso!"
+end
+
+deactivate CF
+deactivate UI
+
+@enduml
