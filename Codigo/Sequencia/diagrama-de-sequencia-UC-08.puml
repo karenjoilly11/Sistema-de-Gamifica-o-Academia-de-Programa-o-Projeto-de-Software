@@ -1,0 +1,196 @@
+@startuml
+title DevLevel - Diagrama de Sequência\nUC-08: Assistir Aula
+
+actor Aluno as A
+participant "Interface\nWeb" as UI
+participant "Controlador\nAula" as CA
+participant "Serviço de\nAutenticação" as Auth
+participant "Serviço de\nPermissões" as Perm
+participant "Serviço de\nDesbloqueio" as Des
+participant "Serviço de\nXP" as XP
+participant "Serviço de\nNotificação" as Notif
+participant "Repositório\nde Dados" as Repo
+database "Banco de\nDados" as DB
+participant "Serviço de\nStreaming" as Stream
+
+== Fluxo Principal - Acessar Aula ==
+
+A -> UI: 1. acessarCatalogoAulas()
+activate UI
+
+UI -> CA: 2. listarAulasDisponiveis(filtros, token)
+activate CA
+
+CA -> Auth: 3. validarToken(token)
+activate Auth
+Auth --> CA: 4. usuarioAutenticado(alunoId)
+deactivate Auth
+
+CA -> Perm: 5. validarPermissao(alunoId, "ALUNO", "AULA", "LISTAR")
+activate Perm
+Perm --> CA: 6. permissaoValida
+deactivate Perm
+
+CA -> Repo: 7. buscarAulasPorAluno(alunoId)
+activate Repo
+Repo -> DB: 8. SELECT c.*,\n       CASE WHEN cd.aluno_id IS NOT NULL THEN true ELSE false END as desbloqueado\nFROM conteudos c\nLEFT JOIN conteudos_desbloqueados cd ON c.id = cd.conteudo_id AND cd.aluno_id = ?\nWHERE c.tipo = 'AULA'\nORDER BY c.nivel_minimo
+DB --> Repo: 9. listaAulas
+Repo --> CA: 10. aulas
+deactivate Repo
+
+CA --> UI: 11. exibirAulas(aulas)
+UI --> A: 12. 📚 Aulas disponíveis:\n- Java Básico (Nível 1) ✓ Desbloqueado\n- Spring Boot (Nível 5) 🔒 Bloqueado\n- Microsserviços (Nível 20) 🔒 Bloqueado
+deactivate CA
+
+== Fluxo Principal - Reproduzir Aula (com validação de desbloqueio) ==
+
+A -> UI: 13. selecionarAula(aulaId)
+activate UI
+UI -> CA: 14. acessarAula(aulaId, token)
+activate CA
+
+CA -> Auth: 15. validarToken(token)
+activate Auth
+Auth --> CA: 16. usuarioAutenticado
+deactivate Auth
+
+' === Extend: Validar Desbloqueio ===
+CA -> Des: 17. verificarDesbloqueioAula(alunoId, aulaId)
+activate Des
+
+Des -> Repo: 18. buscarAulaRequisito(aulaId)
+activate Repo
+Repo -> DB: 19. SELECT nivel_minimo, trilha_associada FROM conteudos WHERE id = ?
+DB --> Repo: 20. dadosAula
+Repo --> Des: 21. nivelMinimo, trilha
+deactivate Repo
+
+Des -> Repo: 22. buscarNivelAluno(alunoId)
+activate Repo
+Repo -> DB: 23. SELECT nivel, trilha_principal FROM alunos WHERE id = ?
+DB --> Repo: 24. nivelAluno, trilhaPrincipal
+deactivate Repo
+
+alt nivelAluno < nivelMinimo
+    Des --> CA: 25. bloqueado(nivelNecessario)
+    CA --> UI: 26. erroBloqueado()
+    UI --> A: 27. 🔒 "Aula bloqueada!\nNecessário nível " + nivelNecessario + ".\nSeu nível atual: " + nivelAluno
+    
+else Aula desbloqueada
+    Des --> CA: 28. liberado()
+    deactivate Des
+    
+    ' === Registra acesso ===
+    CA -> Repo: 29. registrarAcessoAula(alunoId, aulaId)
+    activate Repo
+    Repo -> DB: 30. INSERT INTO acessos_conteudo\n(aluno_id, conteudo_id, data_acesso, progresso)\nVALUES (?, ?, NOW(), 0)
+    DB --> Repo: 31. registrado
+    deactivate Repo
+    
+    ' === Obter URL do streaming ===
+    CA -> Stream: 32. obterUrlStreaming(aulaId)
+    activate Stream
+    Stream --> CA: 33. urlVideo
+    deactivate Stream
+    
+    CA --> UI: 34. iniciarReproducao(urlVideo, aulaId, alunoId)
+    UI --> A: 35. 🎬 Reproduzindo aula...
+    deactivate CA
+
+== Fluxo - Acompanhamento de Progresso (Tempo Assistido) ==
+
+    loop A cada 30 segundos
+        A -> UI: 36. progressoAtualizado(tempoDecorrido)
+        activate UI
+        UI -> CA: 37. atualizarProgresso(aulaId, tempoDecorrido, token)
+        activate CA
+        
+        CA -> Auth: 38. validarToken(token)
+        activate Auth
+        Auth --> CA: 39. usuarioAutenticado
+        deactivate Auth
+        
+        CA -> Repo: 40. salvarProgresso(alunoId, aulaId, tempoDecorrido)
+        activate Repo
+        Repo -> DB: 41. UPDATE acessos_conteudo\nSET progresso = ?, ultima_atualizacao = NOW()\nWHERE aluno_id = ? AND conteudo_id = ?
+        DB --> Repo: 42. atualizado
+        deactivate Repo
+        deactivate CA
+        deactivate UI
+    end
+
+== Fluxo - Conclusão da Aula (Ganho de XP) ==
+
+A -> UI: 43. concluirAula()
+activate UI
+UI -> CA: 44. finalizarAula(aulaId, tempoTotalAssistido, token)
+activate CA
+
+CA -> Auth: 45. validarToken(token)
+activate Auth
+Auth --> CA: 46. usuarioAutenticado
+deactivate Auth
+
+CA -> Repo: 47. buscarProgressoAtual(alunoId, aulaId)
+activate Repo
+Repo -> DB: 48. SELECT progresso FROM acessos_conteudo\nWHERE aluno_id = ? AND conteudo_id = ?
+DB --> Repo: 49. progresso
+Repo --> CA: 50. percentualAssistido
+deactivate Repo
+
+alt percentualAssistido >= 90
+    ' === Conceder XP ===
+    CA -> XP: 51. calcularXPAula(duracao, nivelAula)
+    activate XP
+    XP -> Repo: 52. buscarDuracaoAula(aulaId)
+    activate Repo
+    Repo -> DB: 53. SELECT duracao_estimada, nivel_minimo FROM conteudos WHERE id = ?
+    DB --> Repo: 54. dados
+    deactivate Repo
+    XP -> XP: 55. xpGanho = (duracao * 0.5) + (nivel * 2)
+    XP --> CA: 56. xpGanho
+    deactivate XP
+    
+    CA -> XP: 57. adicionarXP(alunoId, xpGanho)
+    activate XP
+    XP -> Repo: 58. atualizarXPTotal(alunoId, xpGanho)
+    activate Repo
+    Repo -> DB: 59. UPDATE alunos SET xp_total = xp_total + ? WHERE id = ?
+    deactivate Repo
+    XP --> CA: 60. xpAdicionado
+    deactivate XP
+    
+    ' === Registrar conclusão ===
+    CA -> Repo: 61. marcarAulaConcluida(alunoId, aulaId)
+    activate Repo
+    Repo -> DB: 62. UPDATE acessos_conteudo\nSET concluida = true, data_conclusao = NOW()\nWHERE aluno_id = ? AND conteudo_id = ?
+    DB --> Repo: 63. atualizado
+    deactivate Repo
+    
+    ' === Notificação de conclusão ===
+    CA -> Notif: 64. notificarConclusao(alunoId, aulaId, xpGanho)
+    activate Notif
+    Notif -> Notif: 65. formatarMensagem("🎓 Aula concluída!\n+ " + xpGanho + " XP")
+    Notif ->> A: 66. 📧 "Você concluiu a aula e ganhou " + xpGanho + " XP!"
+    deactivate Notif
+    
+    CA --> UI: 67. sucesso(xpGanho)
+    UI --> A: 68. ✅ "Aula concluída!\nVocê ganhou " + xpGanho + " XP!"
+    
+    ' === Verificar level up ===
+    CA -> XP: 69. verificarLevelUp(alunoId)
+    activate XP
+    XP --> CA: 70. nivelVerificado
+    deactivate XP
+    
+else Conclusão incompleta
+    CA --> UI: 71. alertaProgresso(percentualAssistido)
+    UI --> A: 72. ⚠️ "Você assistiu apenas " + percentualAssistido + "% da aula.\nAssista pelo menos 90% para ganhar XP."
+end
+
+deactivate CA
+deactivate UI
+
+end
+
+@enduml
