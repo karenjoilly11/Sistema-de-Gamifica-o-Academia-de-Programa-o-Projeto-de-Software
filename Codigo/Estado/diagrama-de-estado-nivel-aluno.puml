@@ -1,0 +1,87 @@
+@startuml
+skinparam StateBackgroundColor LightBlue
+skinparam StateBorderColor DarkBlue
+skinparam ArrowColor DarkBlue
+skinparam StateEndColor DarkRed
+skinparam StateStartColor DarkGreen
+skinparam FontName Arial
+
+title Diagrama de Transição de Estados\nProgressão de Nível do Aluno - DevLevel
+
+[*] --> Nivel1 : aluno criado no sistema\n/ nivel = 1, xp = 0
+
+state "Nível 1" as Nivel1 {
+  Nivel1 : xpNecessario = 1000
+  Nivel1 : xpAtual = 0
+}
+
+state "Nível 2" as Nivel2 {
+  Nivel2 : xpNecessario = 2000
+  Nivel2 : xpAtual = 0
+}
+
+state "Nível 3" as Nivel3 {
+  Nivel3 : xpNecessario = 3000
+  Nivel3 : xpAtual = 0
+}
+
+state "Nível 4" as Nivel4 {
+  Nivel4 : xpNecessario = 4000
+  Nivel4 : xpAtual = 0
+}
+
+state "Nível N" as NivelN {
+  NivelN : xpNecessario = nivel * 1000
+  NivelN : xpAtual = 0
+}
+
+state "Nível Máximo (50)" as NivelMaximo {
+  NivelMaximo : nivelMaximo = true
+  NivelMaximo : xpAcumulado = "ilimitado"
+}
+
+' === LOSANGO: Verificação de XP ===
+state VerificacaoXP <<choice>>
+
+Nivel1 --> VerificacaoXP : aluno ganha XP\n/ adicionar xpGanho
+
+VerificacaoXP --> Nivel2 : [xp_atual >= 1000]\n/ nivel = 2, xp_remanescente
+VerificacaoXP --> Nivel1 : [xp_atual < 1000]\n/ permanece nível 1
+
+Nivel2 --> VerificacaoXP : aluno ganha XP\n/ adicionar xpGanho
+VerificacaoXP --> Nivel3 : [xp_atual >= 2000]\n/ nivel = 3, xp_remanescente
+VerificacaoXP --> Nivel2 : [xp_atual < 2000]\n/ permanece nível 2
+
+Nivel3 --> VerificacaoXP : aluno ganha XP
+VerificacaoXP --> Nivel4 : [xp_atual >= 3000]
+
+Nivel4 --> VerificacaoXP : aluno ganha XP
+VerificacaoXP --> NivelN : [xp_atual >= 4000]
+
+NivelN --> VerificacaoXP : aluno ganha XP
+VerificacaoXP --> NivelMaximo : [nivel_atual >= 50]\n/ nível máximo atingido
+
+NivelMaximo --> NivelMaximo : [nivel_maximo = true]\n/ XP continua acumulando\nsem alterar nível
+
+' === LEGENDA ===
+note as LegendaGuards
+  **Guards condicionais - Progressão de Nível:**
+  
+  **Cálculo de XP:**
+  • Fórmula: xpNecessario = nivelAtual * 1000
+  • Exemplo: Nível 1 → precisa de 1000 XP
+  • Exemplo: Nível 5 → precisa de 5000 XP
+  
+  **Transições:**
+  • [xp_atual >= xp_necessario] → Avança para próximo nível
+  • [xp_atual < xp_necessario] → Permanece no nível atual
+  • [nivel_atual >= 50] → Nível máximo atingido
+  
+  **Eventos que disparam verificação:**
+  • Concluir exercício
+  • Assistir aula
+  • Ajudar colega no fórum
+  • Completar missão diária
+end note
+
+@enduml
