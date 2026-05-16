@@ -1,0 +1,71 @@
+@startuml
+skinparam StateBackgroundColor LightBlue
+skinparam StateBorderColor DarkBlue
+skinparam ArrowColor DarkBlue
+skinparam StateEndColor DarkRed
+skinparam StateStartColor DarkGreen
+skinparam FontName Arial
+
+title Diagrama de Transição de Estados\nSolicitação de Mentoria - DevLevel
+
+[*] --> Pendente : Aluno solicita mentoria\n/ debitar 100 DevCoins
+
+state "Pendente" as Pendente {
+  Pendente : dataSolicitacao = now()
+  Pendente : status = "aguardando resposta"
+}
+
+' === LOSANGO 1: Verificação da resposta do mentor ===
+state VerificacaoResposta <<choice>>
+
+Pendente --> VerificacaoResposta : mentor responde solicitação
+
+VerificacaoResposta --> Aceita : [mentor_aceitou = true]\n/ gerar link videoconferência
+VerificacaoResposta --> Recusada : [mentor_recusou = true]\n/ estornar 100 DevCoins
+
+state "Aceita" as Aceita {
+  Aceita : linkGerado = false
+  Aceita : dataAceite = now()
+}
+
+Aceita --> Concluida : [link_gerado = true and mentoria_realizada]\n/ registrar feedback
+
+state "Recusada" as Recusada {
+  Recusada : motivoRecusa = "definido pelo mentor"
+  Recusada : devCoinsEstornados = true
+}
+
+Recusada --> [*] : processo encerrado
+
+' === LOSANGO 2: Verificação de cancelamento ===
+state VerificacaoCancelamento <<choice>>
+
+Pendente --> VerificacaoCancelamento : aluno ou mentor cancela
+
+VerificacaoCancelamento --> Cancelada : [status_pendente = true]\n/ estornar DevCoins se aplicável
+
+state "Cancelada" as Cancelada {
+  Cancelada : dataCancelamento = now()
+  Cancelada : canceladoPor = "aluno/mentor"
+}
+
+Cancelada --> [*] : processo encerrado
+
+Concluida --> [*] : processo encerrado
+
+' === LEGENDA ===
+note as LegendaGuards
+  **Guards condicionais - Solicitação de Mentoria:**
+  
+  **Transições principais:**
+  • [mentor_aceitou = true] → Solicitação aceita, link gerado
+  • [mentor_recusou = true] → Solicitação recusada, DevCoins estornados
+  • [status_pendente = true] → Solicitação cancelada
+  
+  **Estados finais:**
+  • Aceita → Concluída (após realização da mentoria)
+  • Recusada → Fim
+  • Cancelada → Fim
+end note
+
+@enduml
