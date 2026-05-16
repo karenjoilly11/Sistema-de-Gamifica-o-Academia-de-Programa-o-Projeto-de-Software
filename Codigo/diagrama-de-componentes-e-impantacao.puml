@@ -1,0 +1,370 @@
+@startuml DevLevel_Componentes
+
+' ===== CONFIGURAÇÕES GERAIS =====
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 11
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #555555
+skinparam ArrowThickness 1.5
+
+' ===== ESTILOS DE COMPONENTES =====
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #888888
+  FontColor #111111
+  BorderThickness 1.5
+}
+
+skinparam node {
+  BackgroundColor #FFF8E7
+  BorderColor #FF9900
+  BorderThickness 2.5
+  FontColor #7D4900
+  FontStyle Bold
+}
+
+skinparam database {
+  BackgroundColor #E8F4FD
+  BorderColor #1A6FA8
+  FontColor #0D3B6E
+}
+
+skinparam queue {
+  BackgroundColor #FFF0F0
+  BorderColor #CC2200
+  FontColor #800000
+}
+
+skinparam rectangle {
+  BackgroundColor #F9F9FF
+  BorderColor #7777BB
+  BorderThickness 1
+}
+
+skinparam note {
+  BackgroundColor #FFFFF0
+  BorderColor #AAAAAA
+}
+
+' =====================================================
+' CLIENTES EXTERNOS (fora da nuvem)
+' =====================================================
+
+rectangle "🌐  Clientes" as Clients #EEF6FF {
+
+  component "📱  App Mobile\n(React Native)" as MobileApp {
+    [iOS / Android]
+    [Offline First]
+    [Push Notifications]
+  }
+
+  component "💻  App Web\n(React / PWA)" as WebApp {
+    [SPA]
+    [Tailwind CSS]
+    [Service Worker]
+  }
+}
+
+' =====================================================
+' AMAZON ECS — BORDA TRACEJADA LARANJA
+' =====================================================
+
+node "☁️  Amazon ECS — AWS Cloud" as ECS {
+
+  ' ---------------------------------------------------
+  ' BORDA: CDN + GATEWAY
+  ' ---------------------------------------------------
+
+  component "⚡  Amazon CloudFront\n(CDN)" as CloudFront {
+    [Edge Locations]
+    [SSL/TLS]
+    [Cache]
+    [WAF]
+  }
+
+  component "🔷  Amazon API Gateway" as APIGateway {
+    [REST API]
+    [WebSocket API]
+    [Rate Limiting]
+    [API Keys]
+  }
+
+  component "⚖️  Application Load Balancer" as ALB {
+    [HTTP / HTTPS]
+    [Health Check]
+    [Sticky Sessions]
+  }
+
+  ' ---------------------------------------------------
+  ' MICROSSERVIÇOS (linha tracejada interna)
+  ' ---------------------------------------------------
+
+  rectangle "🖥️  Microsserviços — Amazon ECS / Fargate" as MSGroup #FFF8E7 {
+
+    component "👤  MS Usuários\n(Spring Boot / Java 17)" as UserMS {
+      [Cadastro & Autenticação]
+      [JWT / OAuth2]
+      [Perfil do Aluno]
+    }
+
+    component "🏆  MS Gamificação\n(Spring Boot / Java 17)" as GamificationMS {
+      [XP Engine]
+      [Níveis & Badges]
+      [Streak / Ranking]
+    }
+
+    component "📚  MS Conteúdo\n(Spring Boot / Java 17)" as ContentMS {
+      [Aulas & Exercícios]
+      [Correção Automática]
+      [Progresso do Aluno]
+    }
+
+    component "🤝  MS Mentoria\n(Spring Boot / Java 17)" as MentorshipMS {
+      [Agendamento]
+      [Disponibilidade]
+      [Link Google Meet]
+    }
+
+    component "💬  MS Fórum\n(Spring Boot / Java 17)" as ForumMS {
+      [Perguntas & Respostas]
+      [Moderação]
+      [Votação]
+    }
+
+    component "🔔  MS Notificação\n(Spring Boot / Java 17)" as NotificationMS {
+      [Dispatcher]
+      [Template Engine]
+      [Preferências do Usuário]
+    }
+  }
+
+  ' ---------------------------------------------------
+  ' WORKER ASSÍNCRONO
+  ' ---------------------------------------------------
+
+  component "⚙️  Worker Transmissão\n(Consumer de Filas)" as WorkerTransmissao {
+    [Processa SQS]
+    [Retry Policy]
+    [Dead Letter Handler]
+    [Envio Multi-canal]
+  }
+
+  ' ---------------------------------------------------
+  ' FILAS SQS
+  ' ---------------------------------------------------
+
+  queue "📦  Amazon SQS\n── Fila de Notificações ──" as SQS_Notify {
+    [Mensagens pendentes]
+    [Dead Letter Queue]
+    [Visibility Timeout]
+  }
+
+  queue "📦  Amazon SQS\n── Fila de Eventos ──" as SQS_Events {
+    [Eventos de XP]
+    [Logs de Auditoria]
+    [Rastreamento]
+  }
+
+  ' ---------------------------------------------------
+  ' SERVIÇOS DE NOTIFICAÇÃO
+  ' ---------------------------------------------------
+
+  rectangle "📨  Serviços de Notificação" as NotifGroup #FFF5F5 {
+
+    component "📧  Amazon SES\n(Email)" as SES {
+      [Envio de Emails]
+      [Templates HTML]
+      [Bounce Handling]
+      [SMTP / API]
+    }
+
+    component "📱  Amazon SNS\n(Push Notification)" as SNS {
+      [Tópicos]
+      [Subscriptions]
+      [FCM / APNs]
+      [Fan-out]
+    }
+
+    component "💬  AWS Twilio SMS\n(SMS / WhatsApp)" as Twilio {
+      [SMS Transacional]
+      [WhatsApp Business]
+      [Two-Factor Auth]
+      [REST API]
+    }
+  }
+
+  ' ---------------------------------------------------
+  ' AWS LAMBDA
+  ' ---------------------------------------------------
+
+  component "λ  AWS Lambda\n(Serverless)" as Lambda {
+    [Validação de Email]
+    [Processamento de Imagens]
+    [Backup Diário Agendado]
+    [Eventos S3 / CloudWatch]
+  }
+
+  ' ---------------------------------------------------
+  ' AMAZON LOCATION SERVICE
+  ' ---------------------------------------------------
+
+  component "📍  Amazon Location Service" as Location {
+    [Geocoding]
+    [Maps & Tiles]
+    [Tracking de Localização]
+    [Cálculo de Rotas]
+  }
+
+  ' ---------------------------------------------------
+  ' BANCOS DE DADOS
+  ' ---------------------------------------------------
+
+  database "🗄️  Amazon RDS — PostgreSQL\n(Primary — Escrita)" as RDS {
+    [Alunos & Turmas]
+    [Mentorias & Agendamentos]
+    [Conteúdos & Progresso]
+    [Badges & Forum]
+  }
+
+  database "🗄️  Amazon RDS — PostgreSQL\n(Read Replica — Leitura)" as RDS_Replica {
+    [Consultas de Dashboard]
+    [Relatórios & Analytics]
+    [Leitura de Notificações]
+  }
+
+  database "🪣  Amazon S3\n(Object Storage)" as S3 {
+    [Imagens & Vídeos]
+    [Assets Estáticos]
+    [Backups]
+  }
+
+  ' =====================================================
+  ' CONEXÕES — CLIENTES → NUVEM
+  ' =====================================================
+
+  WebApp     --> CloudFront   : "HTTPS / TLS 1.3"
+  MobileApp  --> CloudFront   : "HTTPS / TLS 1.3"
+  WebApp    <--> APIGateway   : "WSS (WebSocket)\nNotificações em tempo real"
+  MobileApp <--> APIGateway   : "WSS (WebSocket)\nNotificações em tempo real"
+
+  ' =====================================================
+  ' CONEXÕES — ENTRADA DA API
+  ' =====================================================
+
+  CloudFront --> APIGateway : "HTTPS / REST"
+  APIGateway --> ALB        : "HTTP / JSON"
+
+  ' =====================================================
+  ' CONEXÕES — ALB → MICROSSERVIÇOS
+  ' =====================================================
+
+  ALB --> UserMS         : "TCP/IP — HTTP 1.1"
+  ALB --> GamificationMS : "TCP/IP — HTTP 1.1"
+  ALB --> ContentMS      : "TCP/IP — HTTP 1.1"
+  ALB --> MentorshipMS   : "TCP/IP — HTTP 1.1"
+  ALB --> ForumMS        : "TCP/IP — HTTP 1.1"
+  ALB --> NotificationMS : "TCP/IP — HTTP 1.1"
+
+  ' =====================================================
+  ' CONEXÕES — MICROSSERVIÇOS → RDS (JDBC)
+  ' =====================================================
+
+  UserMS         --> RDS : "JDBC / PostgreSQL\n(Escrita & Leitura)"
+  GamificationMS --> RDS : "JDBC / PostgreSQL\n(Escrita & Leitura)"
+  ContentMS      --> RDS : "JDBC / PostgreSQL\n(Escrita & Leitura)"
+  MentorshipMS   --> RDS : "JDBC / PostgreSQL\n(Escrita & Leitura)"
+  ForumMS        --> RDS : "JDBC / PostgreSQL\n(Escrita & Leitura)"
+  NotificationMS --> RDS_Replica : "JDBC / PostgreSQL\n(Somente Leitura)"
+  RDS            --> RDS_Replica : "Replicação Síncrona"
+
+  ' =====================================================
+  ' CONEXÕES — MICROSSERVIÇOS → SQS (Produtores)
+  ' =====================================================
+
+  GamificationMS --> SQS_Notify  : "SDK AWS — Publica evento"
+  ContentMS      --> SQS_Notify  : "SDK AWS — Publica evento"
+  MentorshipMS   --> SQS_Notify  : "SDK AWS — Publica evento"
+  ForumMS        --> SQS_Notify  : "SDK AWS — Publica evento"
+  NotificationMS --> SQS_Notify  : "SDK AWS — Publica evento"
+
+  UserMS         --> SQS_Events  : "SDK AWS — Evento de usuário"
+  GamificationMS --> SQS_Events  : "SDK AWS — Evento de XP"
+  ContentMS      --> SQS_Events  : "SDK AWS — Evento de progresso"
+
+  ' =====================================================
+  ' CONEXÕES — SQS → WORKER (Consumidores)
+  ' =====================================================
+
+  SQS_Notify --> WorkerTransmissao : "Long Polling\n(Consome fila)"
+  SQS_Events --> WorkerTransmissao : "Long Polling\n(Consome fila)"
+
+  ' =====================================================
+  ' CONEXÕES — WORKER → CANAIS DE NOTIFICAÇÃO
+  ' =====================================================
+
+  WorkerTransmissao --> SES    : "SMTP / REST API\n(Emails)"
+  WorkerTransmissao --> SNS    : "AWS SDK\n(Push Notification)"
+  WorkerTransmissao --> Twilio : "REST API HTTPS\n(SMS / WhatsApp)"
+
+  ' =====================================================
+  ' CONEXÕES — LAMBDA
+  ' =====================================================
+
+  Lambda --> SES : "SDK — Validação de Email"
+  Lambda --> RDS : "JDBC — Backup & Manutenção"
+  Lambda --> S3  : "SDK — Armazenamento de Imagens"
+
+  ' =====================================================
+  ' CONEXÕES — LOCATION SERVICE
+  ' =====================================================
+
+  Location --> APIGateway    : "REST API / HTTPS"
+  MentorshipMS --> Location  : "REST API — Geocoding"
+
+  ' =====================================================
+  ' CONEXÕES — S3
+  ' =====================================================
+
+  ContentMS --> S3 : "SDK AWS — Upload de Assets"
+  CloudFront --> S3 : "Origin Pull\n(Assets Estáticos)"
+
+}
+
+' =====================================================
+' LEGENDA
+' =====================================================
+
+legend right
+  **Legenda — DevLevel**
+  ──────────────────────────────
+  ☁️  Amazon ECS         Orquestração de containers
+  ⚡  CloudFront         CDN / Edge / WAF
+  🔷  API Gateway        Entrada REST + WebSocket
+  ⚖️  Load Balancer      Distribuição de tráfego HTTP
+  ──────────────────────────────
+  🖥️  Microsserviço      Spring Boot + Java 17 (Fargate)
+  ⚙️  Worker             Consumer assíncrono de SQS
+  λ   Lambda             Funções serverless
+  📍  Location Service   Geolocalização & Rotas
+  ──────────────────────────────
+  📦  Amazon SQS         Fila de mensagens (FIFO)
+  📧  Amazon SES         Envio de Emails
+  📱  Amazon SNS         Push Notifications
+  💬  Twilio             SMS / WhatsApp
+  ──────────────────────────────
+  🗄️  RDS PostgreSQL     Banco relacional (Primary)
+  🗄️  RDS Read Replica   Banco relacional (Leitura)
+  🪣  Amazon S3          Object Storage
+  ──────────────────────────────
+  **Protocolos:**
+  → HTTPS/TLS  Comunicação externa segura
+  → TCP/IP     Rede interna (ALB ↔ MS)
+  → JDBC       Conexão com banco de dados
+  → WSS        WebSocket (notificações RT)
+  → SDK AWS    Chamadas nativas AWS
+  → REST API   Integração HTTP/JSON
+endlegend
+
+@enduml
