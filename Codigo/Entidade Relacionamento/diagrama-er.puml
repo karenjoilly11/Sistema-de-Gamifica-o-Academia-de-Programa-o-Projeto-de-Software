@@ -1,0 +1,473 @@
+@startuml DevLevel_ER_Chen_v3
+
+hide empty members
+hide circle
+
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 10
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+' =====================================================
+' ENTIDADE — retângulo azul
+' =====================================================
+skinparam class<<entidade>> {
+  BackgroundColor #DDEEFF
+  BorderColor #1A5FA8
+  BorderThickness 2.5
+  FontColor #0D2E5A
+  FontStyle Bold
+  HeaderBackgroundColor #B8D4F0
+}
+
+' =====================================================
+' ATRIBUTO NORMAL — elipse cinza
+' =====================================================
+skinparam class<<atributo>> {
+  BackgroundColor #F4F4F4
+  BorderColor #999999
+  BorderThickness 1
+  FontColor #333333
+  FontStyle Normal
+  HeaderBackgroundColor #F4F4F4
+  RoundCorner 30
+}
+
+' =====================================================
+' ATRIBUTO CHAVE — elipse azul escuro
+' =====================================================
+skinparam class<<chave>> {
+  BackgroundColor #D0E8FF
+  BorderColor #1A5FA8
+  BorderThickness 2
+  FontColor #0D2E5A
+  FontStyle Bold
+  HeaderBackgroundColor #D0E8FF
+  RoundCorner 30
+}
+
+' =====================================================
+' ATRIBUTO MULTIVALORADO — elipse verde borda dupla
+' =====================================================
+skinparam class<<multi>> {
+  BackgroundColor #E8FFE8
+  BorderColor #228822
+  BorderThickness 3
+  FontColor #114411
+  FontStyle Normal
+  HeaderBackgroundColor #E8FFE8
+  RoundCorner 30
+}
+
+' =====================================================
+' ATRIBUTO DERIVADO — elipse amarela
+' =====================================================
+skinparam class<<derivado>> {
+  BackgroundColor #FFFFF0
+  BorderColor #AAAA44
+  BorderThickness 1
+  FontColor #555500
+  FontStyle Italic
+  HeaderBackgroundColor #FFFFF0
+  RoundCorner 30
+}
+
+' =====================================================
+' RELACIONAMENTO — losango amarelo
+' =====================================================
+skinparam class<<rel>> {
+  BackgroundColor #FFF5CC
+  BorderColor #CC8800
+  BorderThickness 2
+  FontColor #5A3A00
+  FontStyle Bold
+  HeaderBackgroundColor #FFF5CC
+}
+
+' =====================================================
+' ENTIDADES
+' =====================================================
+
+class "USUARIO" <<entidade>>
+class "ALUNO" <<entidade>>
+class "MENTOR" <<entidade>>
+class "ADMINISTRADOR" <<entidade>>
+class "TURMA" <<entidade>>
+class "MATRICULA" <<entidade>>
+class "BADGE" <<entidade>>
+class "CONTEUDO" <<entidade>>
+class "MISSAO_DIARIA" <<entidade>>
+class "MENTORIA" <<entidade>>
+class "PERGUNTA_FORUM" <<entidade>>
+class "RESPOSTA_FORUM" <<entidade>>
+class "NOTIFICACAO" <<entidade>>
+class "HISTORICO_EXERCICIO" <<entidade>>
+
+' =====================================================
+' RELACIONAMENTOS (losangos)
+' =====================================================
+
+class "é um" as her_aluno <<rel>>
+class "é um " as her_mentor <<rel>>
+class "é um  " as her_adm <<rel>>
+class "gerencia" as rel_gerencia <<rel>>
+class "realiza matrícula" as rel_matricula <<rel>>
+class "conquista" as rel_conquista <<rel>>
+class "cria" as rel_cria <<rel>>
+class "desbloqueia" as rel_desbloqueia <<rel>>
+class "submete" as rel_submete <<rel>>
+class "recebe missão" as rel_missao <<rel>>
+class "solicita" as rel_solicita <<rel>>
+class "atende" as rel_atende <<rel>>
+class "publica pergunta" as rel_pergunta <<rel>>
+class "publica resposta" as rel_responde <<rel>>
+class "possui" as rel_possui_resp <<rel>>
+class "recebe notificação" as rel_notif <<rel>>
+
+' =====================================================
+' ATRIBUTOS — USUARIO
+' =====================================================
+
+class "<u>id_usuario</u>" as pk_usuario <<chave>>
+class "nome" as a_unom <<atributo>>
+class "email" as a_uema <<atributo>>
+class "senha_hash" as a_usen <<atributo>>
+class "data_registro" as a_udreg <<atributo>>
+class "status_conta" as a_ustat <<atributo>>
+class "papel" as a_upap <<atributo>>
+class "ultimo_login" as a_ulog <<atributo>>
+class "/idade_conta" as a_uidade <<derivado>>
+
+pk_usuario -- "USUARIO"
+a_unom -- "USUARIO"
+a_uema -- "USUARIO"
+a_usen -- "USUARIO"
+a_udreg -- "USUARIO"
+a_ustat -- "USUARIO"
+a_upap -- "USUARIO"
+a_ulog -- "USUARIO"
+a_uidade -- "USUARIO"
+
+' =====================================================
+' ATRIBUTOS — ALUNO
+' =====================================================
+
+class "<u>id_aluno</u>" as pk_aluno <<chave>>
+class "nivel" as a_aniv <<atributo>>
+class "xp_total" as a_axp <<atributo>>
+class "dev_coins" as a_acoin <<atributo>>
+class "streak_atual" as a_astr <<atributo>>
+class "trilha_principal" as a_atri1 <<atributo>>
+class "trilha_secundaria" as a_atri2 <<atributo>>
+class "telefone" as a_atel <<multi>>
+
+pk_aluno -- "ALUNO"
+a_aniv -- "ALUNO"
+a_axp -- "ALUNO"
+a_acoin -- "ALUNO"
+a_astr -- "ALUNO"
+a_atri1 -- "ALUNO"
+a_atri2 -- "ALUNO"
+a_atel -- "ALUNO"
+
+' =====================================================
+' ATRIBUTOS — MENTOR
+' =====================================================
+
+class "<u>id_mentor</u>" as pk_mentor <<chave>>
+class "especialidade" as a_mesp <<atributo>>
+class "avaliacao_media" as a_maval <<atributo>>
+class "horas_disponiveis" as a_mhoras <<atributo>>
+
+pk_mentor -- "MENTOR"
+a_mesp -- "MENTOR"
+a_maval -- "MENTOR"
+a_mhoras -- "MENTOR"
+
+' =====================================================
+' ATRIBUTOS — ADMINISTRADOR
+' =====================================================
+
+class "<u>id_administrador</u>" as pk_adm <<chave>>
+class "nivel_permissao" as a_adniv <<atributo>>
+class "permissoes" as a_adperm <<multi>>
+
+pk_adm -- "ADMINISTRADOR"
+a_adniv -- "ADMINISTRADOR"
+a_adperm -- "ADMINISTRADOR"
+
+' =====================================================
+' ATRIBUTOS — TURMA
+' =====================================================
+
+class "<u>id_turma</u>" as pk_turma <<chave>>
+class "nome" as a_tnom <<atributo>>
+class "data_inicio" as a_tini <<atributo>>
+class "data_fim_prevista" as a_tfim <<atributo>>
+class "status" as a_tstat <<atributo>>
+
+pk_turma -- "TURMA"
+a_tnom -- "TURMA"
+a_tini -- "TURMA"
+a_tfim -- "TURMA"
+a_tstat -- "TURMA"
+
+' =====================================================
+' ATRIBUTOS — MATRICULA
+' =====================================================
+
+class "<u>id_matricula</u>" as pk_mat <<chave>>
+class "data_matricula" as a_mdata <<atributo>>
+class "desempenho" as a_mdesemp <<atributo>>
+class "faltas" as a_mfalt <<atributo>>
+
+pk_mat -- "MATRICULA"
+a_mdata -- "MATRICULA"
+a_mdesemp -- "MATRICULA"
+a_mfalt -- "MATRICULA"
+
+' =====================================================
+' ATRIBUTOS — BADGE
+' =====================================================
+
+class "<u>id_badge</u>" as pk_badge <<chave>>
+class "nome" as a_bnom <<atributo>>
+class "descricao" as a_bdesc <<atributo>>
+class "xp_concessao" as a_bxp <<atributo>>
+class "tipo" as a_btipo <<atributo>>
+class "status" as a_bstat <<atributo>>
+
+pk_badge -- "BADGE"
+a_bnom -- "BADGE"
+a_bdesc -- "BADGE"
+a_bxp -- "BADGE"
+a_btipo -- "BADGE"
+a_bstat -- "BADGE"
+
+' =====================================================
+' ATRIBUTOS — CONTEUDO
+' =====================================================
+
+class "<u>id_conteudo</u>" as pk_cont <<chave>>
+class "titulo" as a_ctit <<atributo>>
+class "tipo" as a_ctipo <<atributo>>
+class "nivel_minimo" as a_cniv <<atributo>>
+class "dificuldade" as a_cdif <<atributo>>
+class "duracao_estimada" as a_cdur <<atributo>>
+class "trilha_associada" as a_ctri <<atributo>>
+
+pk_cont -- "CONTEUDO"
+a_ctit -- "CONTEUDO"
+a_ctipo -- "CONTEUDO"
+a_cniv -- "CONTEUDO"
+a_cdif -- "CONTEUDO"
+a_cdur -- "CONTEUDO"
+a_ctri -- "CONTEUDO"
+
+' =====================================================
+' ATRIBUTOS — MISSAO_DIARIA
+' =====================================================
+
+class "<u>id_missao</u>" as pk_miss <<chave>>
+class "descricao" as a_missdesc <<atributo>>
+class "tipo_missao" as a_misstipo <<atributo>>
+class "recompensa_xp" as a_missrxp <<atributo>>
+class "recompensa_coins" as a_missrc <<atributo>>
+class "data_validade" as a_missdv <<atributo>>
+class "status" as a_missst <<atributo>>
+
+pk_miss -- "MISSAO_DIARIA"
+a_missdesc -- "MISSAO_DIARIA"
+a_misstipo -- "MISSAO_DIARIA"
+a_missrxp -- "MISSAO_DIARIA"
+a_missrc -- "MISSAO_DIARIA"
+a_missdv -- "MISSAO_DIARIA"
+a_missst -- "MISSAO_DIARIA"
+
+' =====================================================
+' ATRIBUTOS — MENTORIA
+' =====================================================
+
+class "<u>id_mentoria</u>" as pk_ment <<chave>>
+class "data_hora" as a_mendh <<atributo>>
+class "duracao" as a_mendur <<atributo>>
+class "status" as a_menst <<atributo>>
+class "link_videoconferencia" as a_menlink <<atributo>>
+class "feedback" as a_menfb <<atributo>>
+
+pk_ment -- "MENTORIA"
+a_mendh -- "MENTORIA"
+a_mendur -- "MENTORIA"
+a_menst -- "MENTORIA"
+a_menlink -- "MENTORIA"
+a_menfb -- "MENTORIA"
+
+' =====================================================
+' ATRIBUTOS — PERGUNTA_FORUM
+' =====================================================
+
+class "<u>id_pergunta</u>" as pk_perg <<chave>>
+class "titulo" as a_ptit <<atributo>>
+class "conteudo" as a_pcont <<atributo>>
+class "data_criacao" as a_pdata <<atributo>>
+class "status" as a_pstat <<atributo>>
+class "denuncias" as a_pden <<atributo>>
+
+pk_perg -- "PERGUNTA_FORUM"
+a_ptit -- "PERGUNTA_FORUM"
+a_pcont -- "PERGUNTA_FORUM"
+a_pdata -- "PERGUNTA_FORUM"
+a_pstat -- "PERGUNTA_FORUM"
+a_pden -- "PERGUNTA_FORUM"
+
+' =====================================================
+' ATRIBUTOS — RESPOSTA_FORUM
+' =====================================================
+
+class "<u>id_resposta</u>" as pk_resp <<chave>>
+class "conteudo " as a_rcont <<atributo>>
+class "data_resposta" as a_rdata <<atributo>>
+class "votos" as a_rvot <<atributo>>
+class "denuncias " as a_rden <<atributo>>
+
+pk_resp -- "RESPOSTA_FORUM"
+a_rcont -- "RESPOSTA_FORUM"
+a_rdata -- "RESPOSTA_FORUM"
+a_rvot -- "RESPOSTA_FORUM"
+a_rden -- "RESPOSTA_FORUM"
+
+' =====================================================
+' ATRIBUTOS — NOTIFICACAO
+' =====================================================
+
+class "<u>id_notificacao</u>" as pk_notif <<chave>>
+class "titulo " as a_ntit <<atributo>>
+class "mensagem" as a_nmsg <<atributo>>
+class "tipo " as a_ntipo <<atributo>>
+class "data_envio" as a_nenv <<atributo>>
+class "status_leitura" as a_nleit <<atributo>>
+
+pk_notif -- "NOTIFICACAO"
+a_ntit -- "NOTIFICACAO"
+a_nmsg -- "NOTIFICACAO"
+a_ntipo -- "NOTIFICACAO"
+a_nenv -- "NOTIFICACAO"
+a_nleit -- "NOTIFICACAO"
+
+' =====================================================
+' ATRIBUTOS — HISTORICO_EXERCICIO
+' =====================================================
+
+class "<u>id_historico</u>" as pk_hist <<chave>>
+class "resultado" as a_hres <<atributo>>
+class "codigo_submetido" as a_hcod <<atributo>>
+class "xp_ganho" as a_hxp <<atributo>>
+class "data_submissao" as a_hdata <<atributo>>
+
+pk_hist -- "HISTORICO_EXERCICIO"
+a_hres -- "HISTORICO_EXERCICIO"
+a_hcod -- "HISTORICO_EXERCICIO"
+a_hxp -- "HISTORICO_EXERCICIO"
+a_hdata -- "HISTORICO_EXERCICIO"
+
+' =====================================================
+' LIGAÇÕES — HERANÇA
+' =====================================================
+
+"USUARIO" "1" -- her_aluno
+her_aluno "1" -- "ALUNO"
+
+"USUARIO" "1" -- her_mentor
+her_mentor "1" -- "MENTOR"
+
+"USUARIO" "1" -- her_adm
+her_adm "1" -- "ADMINISTRADOR"
+
+' =====================================================
+' LIGAÇÕES — TURMA & MATRÍCULA
+' =====================================================
+
+"MENTOR" "1" -- rel_gerencia
+rel_gerencia -- "N" "TURMA"
+
+"TURMA" "1" -- rel_matricula
+rel_matricula -- "N" "MATRICULA"
+"ALUNO" "1" -- rel_matricula
+
+' =====================================================
+' LIGAÇÕES — BADGES
+' =====================================================
+
+"ALUNO" "N" -- rel_conquista
+rel_conquista -- "N" "BADGE"
+
+"ADMINISTRADOR" "1" -- rel_cria
+rel_cria -- "N" "BADGE"
+
+' =====================================================
+' LIGAÇÕES — CONTEÚDO & EXERCÍCIOS
+' =====================================================
+
+"ALUNO" "N" -- rel_desbloqueia
+rel_desbloqueia -- "N" "CONTEUDO"
+
+"ALUNO" "1" -- rel_submete
+rel_submete -- "N" "HISTORICO_EXERCICIO"
+"CONTEUDO" "1" -- rel_submete
+
+' =====================================================
+' LIGAÇÕES — MISSÕES
+' =====================================================
+
+"ALUNO" "1" -- rel_missao
+rel_missao -- "N" "MISSAO_DIARIA"
+
+' =====================================================
+' LIGAÇÕES — MENTORIAS
+' =====================================================
+
+"ALUNO" "1" -- rel_solicita
+rel_solicita -- "N" "MENTORIA"
+
+"MENTOR" "1" -- rel_atende
+rel_atende -- "N" "MENTORIA"
+
+' =====================================================
+' LIGAÇÕES — FÓRUM
+' =====================================================
+
+"ALUNO" "1" -- rel_pergunta
+rel_pergunta -- "N" "PERGUNTA_FORUM"
+
+"ALUNO" "1" -- rel_responde
+rel_responde -- "N" "RESPOSTA_FORUM"
+
+"PERGUNTA_FORUM" "1" -- rel_possui_resp
+rel_possui_resp -- "N" "RESPOSTA_FORUM"
+
+' =====================================================
+' LIGAÇÕES — NOTIFICAÇÕES
+' =====================================================
+
+"USUARIO" "1" -- rel_notif
+rel_notif -- "N" "NOTIFICACAO"
+
+' =====================================================
+' LEGENDA
+' =====================================================
+
+legend bottom
+  **Legenda — Notação Chen (ER Conceitual) — DevLevel**
+  ──────────────────────────────────────────────────────────
+  Azul escuro  [ ENTIDADE ]           Entidade forte
+  Amarelo      < relacionamento >     Losango de relacionamento
+  Cinza        ( atributo )           Atributo simples
+  Azul claro   ( <u>id_x</u> )       Chave primária (sublinhado)
+  Verde        (( multivalorado ))    Atributo multivalorado
+  Amarelo claro  ( /derivado )        Atributo derivado
+  ──────────────────────────────────────────────────────────
+  Cardinalidades: "1" e "N" nas pontas das ligações
+endlegend
+
+@enduml
