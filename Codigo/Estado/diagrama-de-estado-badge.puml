@@ -1,0 +1,85 @@
+@startuml
+skinparam StateBackgroundColor LightBlue
+skinparam StateBorderColor DarkBlue
+skinparam ArrowColor DarkBlue
+skinparam StateEndColor DarkRed
+skinparam StateStartColor DarkGreen
+skinparam FontName Arial
+
+title Diagrama de Transição de Estados\nCiclo de Vida do Badge - DevLevel
+
+[*] --> Criada : admin cria badge\n/ definir nome, descrição, ícone
+
+state "Criada" as Criada {
+  Criada : dataCriacao = now()
+  Criada : criadoPor = adminId
+  Criada : status = "inativa"
+}
+
+Criada --> Ativa : admin ativa badge\n/ disponível para concessão
+
+state "Ativa" as Ativa {
+  Ativa : dataAtivacao = now()
+  Ativa : totalConcedidos = 0
+  Ativa : ativa = true
+}
+
+' === LOSANGO 1: Concessão do badge ===
+state VerificacaoConcessao <<choice>>
+
+Ativa --> VerificacaoConcessao : aluno atinge critério\n/ sistema detecta conquista
+
+VerificacaoConcessao --> Concedida : [critério_atendido = true]\n/ conceder badge e XP
+VerificacaoConcessao --> Ativa : [critério_atendido = false]\n/ badge não concedido
+
+state "Concedida" as Concedida {
+  Concedida : dataConcessao = now()
+  Concedida : alunoId = "destinatário"
+  Concedida : xpConcedido = xpBadge
+  Concedida : notificado = false
+}
+
+Concedida --> Ativa : [badge_concedido = true]\n/ incrementar totalConcedidos
+
+Ativa --> Desativada : admin desativa badge\n/ novas concessões bloqueadas
+
+state "Desativada" as Desativada {
+  Desativada : dataDesativacao = now()
+  Desativada : motivo = "admin"
+  Desativada : podeReativar = true
+}
+
+Desativada --> Ativa : admin reativa badge\n/ novas concessões permitidas
+
+Ativa --> Removida : admin remove badge\n/ apenas sem concessões
+
+Desativada --> Removida : admin remove badge
+
+state "Removida" as Removida {
+  Removida : dataRemocao = now()
+  Removida : removidoPor = adminId
+}
+
+Removida --> [*]
+
+' === LEGENDA ===
+note as LegendaGuards
+  **Guards condicionais - Badge:**
+  
+  **Transições de administração:**
+  • [admin ativa badge] → Badge disponível para concessão
+  • [admin desativa badge] → Novas concessões bloqueadas
+  • [admin reativa badge] → Concessões permitidas novamente
+  • [admin remove badge] → Badge removido (se não concedido)
+  
+  **Transições de concessão:**
+  • [critério_atendido = true] → Badge concedido ao aluno
+  • [critério_atendido = false] → Badge não concedido
+  
+  **Regras de negócio:**
+  • Badges já concedidos permanecem com o aluno mesmo se desativados
+  • Remoção só permitida se badge nunca foi concedido
+  • Badge concedido gera XP para o aluno
+end note
+
+@enduml
