@@ -1,0 +1,74 @@
+@startuml
+skinparam StateBackgroundColor LightBlue
+skinparam StateBorderColor DarkBlue
+skinparam ArrowColor DarkBlue
+skinparam StateEndColor DarkRed
+skinparam StateStartColor DarkGreen
+skinparam FontName Arial
+
+title Diagrama de Transição de Estados\nMissão Diária - DevLevel
+
+[*] --> Disponivel : 00:00 - Sistema gera missões\n/ atribuir ao aluno
+
+state "Disponível" as Disponivel {
+  Disponivel : dataGeracao = today()
+  Disponivel : prazoValidade = "23:59"
+  Disponivel : tentativasReroll = 0
+}
+
+' === LOSANGO 1: Ações do aluno ===
+state VerificacaoAcao <<choice>>
+
+Disponivel --> VerificacaoAcao : aluno interage com missão
+
+VerificacaoAcao --> EmAndamento : [aluno_iniciou = true]\n/ registrar início
+VerificacaoAcao --> Trocada : [aluno_solicitou_reroll = true and tentativas_reroll < 1]\n/ debitar 10 XP
+VerificacaoAcao --> Expirada : [prazo_expirado = true]\n/ marcar como não concluída
+
+state "Em Andamento" as EmAndamento {
+  EmAndamento : dataInicio = now()
+  EmAndamento : progresso = 0
+}
+
+EmAndamento --> Concluida : [missão_completada = true]\n/ conceder XP e DevCoins
+EmAndamento --> Disponivel : [aluno_abandonou = true]\n/ resetar progresso
+
+state "Trocada" as Trocada {
+  Trocada : novaMissaoGerada = false
+  Trocada : xpDebitado = 10
+}
+
+Trocada --> Disponivel : [nova_missao_gerada = true]\n/ substituir missão
+
+state "Concluida" as Concluida {
+  Concluida : dataConclusao = now()
+  Concluida : xpGanho = 30
+  Concluida : devCoinsGanhos = 1
+}
+
+state "Expirada" as Expirada {
+  Expirada : dataExpiracao = "23:59"
+  Expirada : motivo = "prazo encerrado"
+}
+
+Concluida --> [*]
+Expirada --> [*]
+
+' === LEGENDA ===
+note as LegendaGuards
+  **Guards condicionais - Missão Diária:**
+  
+  **Transições principais:**
+  • [aluno_iniciou = true] → Missão em andamento
+  • [aluno_solicitou_reroll = true and tentativas_reroll < 1] → Missão trocada
+  • [prazo_expirado = true] → Missão expirada
+  • [missão_completada = true] → Missão concluída (ganho de XP)
+  • [aluno_abandonou = true] → Retorno ao estado disponível
+  
+  **Regras de negócio:**
+  • Apenas 1 reroll por dia permitido
+  • Custo do reroll: 10 XP
+  • Missão expira às 23:59 do mesmo dia
+end note
+
+@enduml
