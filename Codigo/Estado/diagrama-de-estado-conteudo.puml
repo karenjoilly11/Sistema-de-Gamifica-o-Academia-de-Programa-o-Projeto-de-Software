@@ -1,0 +1,90 @@
+@startuml
+skinparam StateBackgroundColor LightBlue
+skinparam StateBorderColor DarkBlue
+skinparam ArrowColor DarkBlue
+skinparam StateEndColor DarkRed
+skinparam StateStartColor DarkGreen
+skinparam FontName Arial
+
+title Diagrama de Transição de Estados\nCiclo de Vida do Conteúdo - DevLevel
+
+[*] --> Rascunho : admin cria conteúdo\n/ definir dados básicos
+
+state "Rascunho" as Rascunho {
+  Rascunho : versao = 0.1
+  Rascunho : status = "em edição"
+  Rascunho : autor = adminId
+}
+
+Rascunho --> EmRevisao : admin envia para revisão\n/ notificar revisores
+
+state "Em Revisão" as EmRevisao {
+  EmRevisao : dataEnvio = now()
+  EmRevisao : revisores = listaIds
+  EmRevisao : parecerPendente = true
+}
+
+' === LOSANGO 1: Resultado da revisão ===
+state ResultadoRevisao <<choice>>
+
+EmRevisao --> ResultadoRevisao : revisores emitem parecer
+
+ResultadoRevisao --> Publicado : [todos_aprovadores = true]\n/ conteúdo disponível para alunos
+ResultadoRevisao --> Rascunho : [reprovado = true]\n/ admin corrige conforme parecer
+
+state "Publicado" as Publicado {
+  Publicado : dataPublicacao = now()
+  Publicado : acessos = 0
+  Publicado : avaliacaoMedia = 0
+}
+
+' === LOSANGO 2: Estado do conteúdo para o aluno ===
+state VerificacaoAcesso <<choice>>
+
+Publicado --> VerificacaoAcesso : aluno tenta acessar
+
+VerificacaoAcesso --> Bloqueado : [nivel_aluno < nivel_minimo]\n/ exibir mensagem de bloqueio
+VerificacaoAcesso --> Disponivel : [nivel_aluno >= nivel_minimo]\n/ liberar acesso
+
+state "Disponível" as Disponivel {
+  Disponivel : alunoPodeAcessar = true
+  Disponivel : progresso = "variável por aluno"
+}
+
+Disponivel --> Concluido : [aluno_concluiu = true]\n/ registrar XP ganho
+
+Publicado --> Desatualizado : admin marca como obsoleto\n/ conteúdo precisa de atualização
+
+state "Desatualizado" as Desatualizado {
+  Desatualizado : dataObsolescencia = now()
+  Desatualizado : motivo = "conteúdo desatualizado"
+}
+
+Desatualizado --> Rascunho : admin inicia revisão\n/ criar nova versão
+Desatualizado --> Arquivado : admin arquiva conteúdo\n/ remover do catálogo
+
+state "Arquivado" as Arquivado {
+  Arquivado : dataArquivamento = now()
+  Arquivado : preservado = true
+}
+
+Arquivado --> [*]
+
+' === LEGENDA ===
+note as LegendaGuards
+  **Guards condicionais - Conteúdo:**
+  
+  **Transições de publicação:**
+  • [todos_aprovadores = true] → Conteúdo publicado
+  • [reprovado = true] → Retorna para rascunho
+  
+  **Transições de acesso:**
+  • [nivel_aluno < nivel_minimo] → Conteúdo bloqueado
+  • [nivel_aluno >= nivel_minimo] → Conteúdo disponível
+  • [aluno_concluiu = true] → Conteúdo concluído (histórico)
+  
+  **Transições de manutenção:**
+  • Admin pode marcar como desatualizado → Criar nova versão ou arquivar
+end note
+
+@enduml
