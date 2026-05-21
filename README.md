@@ -193,6 +193,104 @@ A arquitetura proposta para o **DevLevel** segue o padrão de **microsserviços*
 ## 📂 Estrutura do Repositório
 
 
+## 📁 Codigo
+
+Contém os arquivos-fonte da modelagem UML em PlantUML (`.puml`).
+
+```bash
+Codigo/
+│
+├── Caso de Uso/
+│   └── diagrama-de-caso-de-uso.puml
+│
+├── Classe/
+│   └── diagrama-de-classes-devlevel.puml
+│
+├── Componente e Implantação/
+│   └── diagrama-de-componentes-e-implantacao.puml
+│
+├── Entidade Relacionamento/
+│   └── diagrama-er.puml
+│
+├── Estado/
+│   ├── diagrama-de-estado-badge.puml
+│   ├── diagrama-de-estado-conteudo.puml
+│   ├── diagrama-de-estado-missao-diaria.puml
+│   ├── diagrama-de-estado-nivel-aluno.puml
+│   └── diagrama-de-estado-solicitacao-mentoria.puml
+│
+└── Sequencia/
+    ├── diagrama-de-sequencia-UC-01.puml
+    ├── diagrama-de-sequencia-UC-02.puml
+    ├── diagrama-de-sequencia-UC-03.puml
+    ├── diagrama-de-sequencia-UC-04.puml
+    ├── diagrama-de-sequencia-UC-05.puml
+    ├── diagrama-de-sequencia-UC-07.puml
+    ├── diagrama-de-sequencia-UC-08.puml
+    ├── diagrama-de-sequencia-UC-09.puml
+    ├── diagrama-de-sequencia-UC-10.puml
+    ├── diagrama-de-sequencia-UC-11.puml
+    ├── diagrama-de-sequencia-UC-12.puml
+    ├── diagrama-de-sequencia-UC-14.puml
+    └── diagrama-de-sequencia-UC-15.puml
+```
+
+---
+
+## 📁 Modelagem
+
+Contém as imagens exportadas dos diagramas UML utilizados na documentação do sistema.
+
+```bash
+Modelagem/
+│
+├── Caso de Uso/
+│   └── caso-de-uso-devlevel.png
+│
+├── Classe/
+│   └── classes-devlevel.png
+│
+├── Comunicação/
+│   ├── Comunicação-UC09.png
+│   └── comunicação-UC12.png
+│
+├── ER/
+│   └── diagrama-er-devlevel.png
+│
+├── Estado/
+│   ├── diagrama-de-estado-badge.png
+│   ├── diagrama-de-estado-conteudo.png
+│   ├── diagrama-de-estado-missao-diaria.png
+│   ├── diagrama-de-estado-nivel-aluno.png
+│   └── diagrama-de-estado-solicitacao-mentoria.png
+│
+└── Sequencia/
+    ├── diagrama-de-sequencia-UC-01.png
+    ├── diagrama-de-sequencia-UC-02.png
+    ├── diagrama-de-sequencia-UC-03.png
+    ├── diagrama-de-sequencia-UC-04.png
+    ├── diagrama-de-sequencia-UC-05.png
+    ├── diagrama-de-sequencia-UC-07.png
+    ├── diagrama-de-sequencia-UC-08.png
+    ├── diagrama-de-sequencia-UC-09.png
+    ├── diagrama-de-sequencia-UC-10.png
+    ├── diagrama-de-sequencia-UC-11.png
+    ├── diagrama-de-sequencia-UC-12.png
+    ├── diagrama-de-sequencia-UC-14.png
+    └── diagrama-de-sequencia-UC-15.png
+```
+
+---
+
+## 📁 Documentação
+Modelagem/
+│
+├── Trabalho Final - DevLevel.png
+
+```
+
+---
+
 ## 📖 Documentação
 
 A documentação completa do projeto está disponível em formato PDF na pasta `/docs`. O documento contém:
