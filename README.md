@@ -34,7 +34,7 @@
     </td>
     <td>
       <div>
-        <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/LogoDevLevel.png" alt="Logo DevLevel" width="25%"/>
+        <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/LogoDevLevel.png" alt="Logo DevLevel" width="50%"/>
       </div>
     </td>
   </tr>
