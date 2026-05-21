@@ -186,14 +186,12 @@ A arquitetura proposta para o **DevLevel** segue o padrão de **microsserviços*
 
 | Diagrama de Arquitetura | Detalhe da Arquitetura |
 | :---: | :---: |
-| **Visão Geral (Macro)** | **Camada de Serviços (XP Engine)** |
-| <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=Arquitetura+Macro" alt="Diagrama de Visão Geral" width="300"> | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=XP+Engine" alt="Diagrama XP Engine" width="300"> |
-| **Modelo de Dados (DER)** | **Fluxo de Autenticação** |
-| <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=DER" alt="Diagrama Entidade-Relacionamento" width="300"> | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=Login+Flow" alt="Diagrama de Sequência - Login" width="300"> |
-| **Infraestrutura (AWS)** | **API Endpoints** |
-| <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=AWS+Deploy" alt="Diagrama de Deploy AWS" width="300"> | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=API+Map" alt="Mapa de Endpoints" width="300"> |
-
----
+| **Casos de Uso** | **Diagrama de Classes** |
+| <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Modelagem/Caso%20de%20Uso/caso-de-uso-devlevel.png?raw=true" alt="Diagrama de Casos de Uso" width="300"> | <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Modelagem/Classe/classes-devlevel.png?raw=true" alt="Diagrama de Classes" width="300"> |
+| **Comunicação (UC-12)** | **Diagrama de Sequência (UC-15)** |
+| <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Modelagem/Comunica%C3%A7%C3%A3o/comunicac%CC%A7a%CC%83o-UC12.png?raw=true" alt="Diagrama de Comunicação UC-12" width="300"> | <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Modelagem/Sequencia/diagrama-de-sequencia-UC-15.png?raw=true" alt="Diagrama de Sequência UC-15" width="300"> |
+| **Diagrama ER (DER)** | **Diagrama de Estados (Badge)** |
+| <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Modelagem/ER/diagrama-er-devlevel.png?raw=true" alt="Diagrama Entidade-Relacionamento" width="300"> | <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Modelagem/Estado/diagrama-de-estado-badge.png?raw=true" alt="Diagrama de Estados - Badge" width="300"> |
 
 ## 📂 Estrutura do Repositório
 
