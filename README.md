@@ -3,7 +3,6 @@
 <!-- Banner com ondas (waving) e gradiente roxo -->
 <img src="https://capsule-render.vercel.app/api?type=waving&height=240&color=0:6B21E8,50:A855F7,100:C084FC&text=DevLevel&fontColor=ffffff&fontSize=52&fontAlignY=40&desc=Plataforma%20de%20Gamifica%C3%A7%C3%A3o%20para%20Academia%20de%20Programa%C3%A7%C3%A3o&descAlignY=60" alt="Banner DevLevel" width="100%" />
 
-
 <p>
   <strong>🎮 Projeto acadêmico</strong> da disciplina de <strong>Projeto de Software</strong><br>
   para modelagem de uma plataforma de <strong>gamificação</strong> com mecânicas de XP, níveis, missões e conquistas.
@@ -15,7 +14,9 @@
 
 </div>
 
-#🏷️ DevLevel - Plataforma de Gamificação para Academia de Programação 👨‍💻
+---
+
+# 🏷️ DevLevel - Plataforma de Gamificação para Academia de Programação 👨‍💻
 
 > [!NOTE]
 > **Transforme o aprendizado de programação em uma jornada épica!** O DevLevel é uma plataforma que utiliza mecânicas de jogos (XP, níveis, missões diárias, rankings e conquistas) para aumentar o engajamento e reduzir a evasão em academias de programação.
@@ -33,13 +34,14 @@
     </td>
     <td>
       <div>
-        <img src="https://via.placeholder.com/120x120/2d2d2d/00ff88?text=D](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/LogoDevLevel.png" alt="Logo DevLevel" width="120px"/>
+        <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/LogoDevLevel.png" alt="Logo DevLevel" width="120px"/>
       </div>
     </td>
   </tr>
 </table>
 
 ---
+
 
 ## 🚧 Status do Projeto
 
