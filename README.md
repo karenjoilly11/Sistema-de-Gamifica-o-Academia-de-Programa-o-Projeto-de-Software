@@ -3,8 +3,6 @@
 <!-- Banner com ondas (waving) e gradiente roxo -->
 <img src="https://capsule-render.vercel.app/api?type=waving&height=240&color=0:6B21E8,50:A855F7,100:C084FC&text=DevLevel&fontColor=ffffff&fontSize=52&fontAlignY=40&desc=Plataforma%20de%20Gamifica%C3%A7%C3%A3o%20para%20Academia%20de%20Programa%C3%A7%C3%A3o&descAlignY=60" alt="Banner DevLevel" width="100%" />
 
-<!-- Linhas / Listras decorativas -->
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=18&duration=3000&pause=500&color=A855F7&center=true&vCenter=true&width=600&lines=━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" alt="Linha decorativa" />
 
 <p>
   <strong>🎮 Projeto acadêmico</strong> da disciplina de <strong>Projeto de Software</strong><br>
