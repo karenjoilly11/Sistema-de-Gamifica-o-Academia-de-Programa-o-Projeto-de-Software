@@ -47,12 +47,12 @@
 
 ## 🚧 Status do Projeto
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/devlevel/devlevel/main.yml?branch=main)](https://github.com/devlevel/devlevel/actions/workflows/main.yml)
-[![Versão](https://img.shields.io/badge/Versão-v1.0.0-blue)](https://github.com/devlevel/devlevel/releases)
-[![Licença](https://img.shields.io/github/license/devlevel/devlevel)](#licença)
-[![GitHub repo size](https://img.shields.io/github/repo-size/devlevel/devlevel?style=for-the-badge)]()
-
----
+[![GitHub repo size](https://img.shields.io/github/repo-size/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software?style=for-the-badge)](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software)
+[![GitHub language count](https://img.shields.io/github/languages/count/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software?style=for-the-badge)](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software)
+[![GitHub top language](https://img.shields.io/github/languages/top/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software?style=for-the-badge)](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software)
+[![Licença](https://img.shields.io/github/license/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software?style=for-the-badge)](LICENSE)
+[![Diagramas](https://img.shields.io/badge/Diagramas-15-blue?style=for-the-badge)](#-diagramas-uml)
+[![Status](https://img.shields.io/badge/Status-Concluído-brightgreen?style=for-the-badge)](#)
 
 ## 📚 Índice
 - [Sobre o Projeto](#-sobre-o-projeto)
