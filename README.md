@@ -295,11 +295,15 @@ Modelagem/
 │
 ```
 
+A documentação completa do projeto está disponível para download no formato PDF. O documento contém:
+
 - Introdução e contextualização do problema
 - Modelos de Usuário e Requisitos (Atores, Casos de Uso)
 - Diagramas de Sequência do Sistema e Contratos de Operação
 - Modelos de Projeto (Arquitetura, Componentes, Classes, Sequência, Comunicação, Estados)
 - Modelos de Dados (DER, Esquema do Banco, Estratégias de Mapeamento)
+
+[📄 Acessar Documentação Completa (PDF)](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Documenta%C3%A7%C3%A3o/Trabalho%20Final%20-%20DevLevel%20(2).pdf)
 ---
 
 
