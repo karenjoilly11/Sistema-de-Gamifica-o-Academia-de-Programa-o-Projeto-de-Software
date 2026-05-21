@@ -14,7 +14,8 @@
 </p>
 
 </div>
-# 🏷️ DevLevel - Plataforma de Gamificação para Academia de Programação 👨‍💻
+
+#🏷️ DevLevel - Plataforma de Gamificação para Academia de Programação 👨‍💻
 
 > [!NOTE]
 > **Transforme o aprendizado de programação em uma jornada épica!** O DevLevel é uma plataforma que utiliza mecânicas de jogos (XP, níveis, missões diárias, rankings e conquistas) para aumentar o engajamento e reduzir a evasão em academias de programação.
@@ -32,7 +33,7 @@
     </td>
     <td>
       <div>
-        <img src="[https://via.placeholder.com/120x120/2d2d2d/00ff88?text=D](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/DevLevel.png)" alt="Logo DevLevel" width="120px"/>
+        <img src="https://via.placeholder.com/120x120/2d2d2d/00ff88?text=D](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/LogoDevLevel.png" alt="Logo DevLevel" width="120px"/>
       </div>
     </td>
   </tr>
