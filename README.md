@@ -20,7 +20,7 @@
 > **Transforme o aprendizado de programação em uma jornada épica!** O DevLevel é uma plataforma que utiliza mecânicas de jogos (XP, níveis, missões diárias, rankings e conquistas) para aumentar o engajamento e reduzir a evasão em academias de programação.
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x200/2d2d2d/00ff88?text=DevLevel+-+Level+Up+Your+Coding+Journey" alt="DevLevel Banner" width="100%"/>
+  <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/DevLevel.png" alt="DevLevel Banner" width="100%"/>
 </div>
 
 <table>
@@ -32,7 +32,7 @@
     </td>
     <td>
       <div>
-        <img src="https://via.placeholder.com/120x120/2d2d2d/00ff88?text=D" alt="Logo DevLevel" width="120px"/>
+        <img src="[https://via.placeholder.com/120x120/2d2d2d/00ff88?text=D](https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/DevLevel.png)" alt="Logo DevLevel" width="120px"/>
       </div>
     </td>
   </tr>
@@ -283,23 +283,22 @@ Modelagem/
 ---
 
 ## 📁 Documentação
+Contém a documentação do trabalho final.
+
+```bash
 Modelagem/
 │
 ├── Trabalho Final - DevLevel.png
-
+│
 ```
-
----
-
-## 📖 Documentação
-
-A documentação completa do projeto está disponível em formato PDF na pasta `/docs`. O documento contém:
 
 - Introdução e contextualização do problema
 - Modelos de Usuário e Requisitos (Atores, Casos de Uso)
 - Diagramas de Sequência do Sistema e Contratos de Operação
 - Modelos de Projeto (Arquitetura, Componentes, Classes, Sequência, Comunicação, Estados)
 - Modelos de Dados (DER, Esquema do Banco, Estratégias de Mapeamento)
+---
+
 
 ## 👥 Autor
 
