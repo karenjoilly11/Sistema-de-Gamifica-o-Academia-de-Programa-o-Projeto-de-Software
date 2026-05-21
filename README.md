@@ -13,8 +13,6 @@
   🎯 XP • 🏆 Níveis • 📋 Missões Diárias • 🎓 Trilhas • 💰 DevCoins • 🔥 Streaks • 🏅 Badges
 </p>
 
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=18&duration=3000&pause=500&color=A855F7&center=true&vCenter=true&width=600&lines=━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" alt="Linha decorativa" />
-
 </div>
 # 🏷️ DevLevel - Plataforma de Gamificação para Academia de Programação 👨‍💻
 
