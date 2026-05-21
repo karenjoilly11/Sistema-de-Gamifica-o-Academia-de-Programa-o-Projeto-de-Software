@@ -22,7 +22,7 @@
 > **Transforme o aprendizado de programação em uma jornada épica!** O DevLevel é uma plataforma que utiliza mecânicas de jogos (XP, níveis, missões diárias, rankings e conquistas) para aumentar o engajamento e reduzir a evasão em academias de programação.
 
 <div align="center">
-  <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/DevLevel.png" alt="DevLevel Banner" width="75%"/>
+  <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/DevLevel.png" alt="DevLevel Banner" width="50%"/>
 </div>
 
 <table>
@@ -34,7 +34,7 @@
     </td>
     <td>
       <div>
-        <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/LogoDevLevel.png" alt="Logo DevLevel" width="120px"/>
+        <img src="https://github.com/karenjoilly11/Sistema-de-Gamifica-o-Academia-de-Programa-o-Projeto-de-Software/blob/main/Assets/LogoDevLevel.png" alt="Logo DevLevel" width="25%"/>
       </div>
     </td>
   </tr>
