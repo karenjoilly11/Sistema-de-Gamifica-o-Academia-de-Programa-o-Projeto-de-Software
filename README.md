@@ -1,3 +1,23 @@
+<div align="center">
+
+<!-- Banner com ondas (waving) e gradiente roxo -->
+<img src="https://capsule-render.vercel.app/api?type=waving&height=240&color=0:6B21E8,50:A855F7,100:C084FC&text=DevLevel&fontColor=ffffff&fontSize=52&fontAlignY=40&desc=Plataforma%20de%20Gamifica%C3%A7%C3%A3o%20para%20Academia%20de%20Programa%C3%A7%C3%A3o&descAlignY=60" alt="Banner DevLevel" width="100%" />
+
+<!-- Linhas / Listras decorativas -->
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=18&duration=3000&pause=500&color=A855F7&center=true&vCenter=true&width=600&lines=━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" alt="Linha decorativa" />
+
+<p>
+  <strong>🎮 Projeto acadêmico</strong> da disciplina de <strong>Projeto de Software</strong><br>
+  para modelagem de uma plataforma de <strong>gamificação</strong> com mecânicas de XP, níveis, missões e conquistas.
+</p>
+
+<p>
+  🎯 XP • 🏆 Níveis • 📋 Missões Diárias • 🎓 Trilhas • 💰 DevCoins • 🔥 Streaks • 🏅 Badges
+</p>
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=18&duration=3000&pause=500&color=A855F7&center=true&vCenter=true&width=600&lines=━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" alt="Linha decorativa" />
+
+</div>
 # 🏷️ DevLevel - Plataforma de Gamificação para Academia de Programação 👨‍💻
 
 > [!NOTE]
@@ -27,49 +47,22 @@
 ## 🚧 Status do Projeto
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/devlevel/devlevel/main.yml?branch=main)](https://github.com/devlevel/devlevel/actions/workflows/main.yml)
-[![Test Coverage](https://codecov.io/gh/devlevel/devlevel/branch/main/graph/badge.svg)](https://codecov.io/gh/devlevel/devlevel)
 [![Versão](https://img.shields.io/badge/Versão-v1.0.0-blue)](https://github.com/devlevel/devlevel/releases)
 [![Licença](https://img.shields.io/github/license/devlevel/devlevel)](#licença)
-
-[![Versão](https://img.shields.io/badge/Versão-v1.0.0-blue?style=for-the-badge)](https://github.com/devlevel/devlevel/releases)
-![React](https://img.shields.io/badge/React-19.1.1-007ec6?style=for-the-badge&logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7.1.2-007ec6?style=for-the-badge&logo=vite&logoColor=white)
-![Java](https://img.shields.io/badge/Java-17-007ec6?style=for-the-badge&logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.5-007ec6?style=for-the-badge&logo=springboot&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-007ec6?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-27.0-007ec6?style=for-the-badge&logo=docker&logoColor=white)
-![GitHub repo size](https://img.shields.io/github/repo-size/devlevel/devlevel?style=for-the-badge)
-![GitHub stars](https://img.shields.io/github/stars/devlevel/devlevel?style=for-the-badge)
-![GitHub forks](https://img.shields.io/github/forks/devlevel/devlevel?style=for-the-badge)
+[![GitHub repo size](https://img.shields.io/github/repo-size/devlevel/devlevel?style=for-the-badge)]()
 
 ---
 
 ## 📚 Índice
-- [Links Úteis](#-links-úteis)
 - [Sobre o Projeto](#-sobre-o-projeto)
 - [Funcionalidades Principais](#-funcionalidades-principais)
+- [Diagramas UML](#-diagramas-uml)
 - [Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [Arquitetura](#-arquitetura)
-- [Instalação e Execução](#-instalação-e-execução)
-- [Deploy](#-deploy)
-- [Estrutura de Pastas](#-estrutura-de-pastas)
-- [Demonstração](#-demonstração)
-- [Testes](#-testes)
-- [Documentações utilizadas](#-documentações-utilizadas)
+- [Estrutura do Repositório](#-estrutura-do-repositório)
+- [Documentação](#-documentação)
 - [Autores](#-autores)
-- [Contribuição](#-contribuição)
-- [Agradecimentos](#-agradecimentos)
 - [Licença](#-licença)
-
----
-
-## 🔗 Links Úteis
-
-- 🌐 **Demo Online:** [Acesse a Aplicação Web](https://devlevel-demo.vercel.app)
-  > 💻 **Descrição:** Ambiente de demonstração do DevLevel hospedado na Vercel.
-- 📱 **Download Mobile:** Em desenvolvimento (previsto para v2.0)
-- 📖 **Documentação Técnica:** [Acesse a Wiki](https://github.com/devlevel/devlevel/wiki)
-  > 📚 **Descrição:** Documentação completa da API (Swagger/OpenAPI) e guias de arquitetura.
 
 ---
 
@@ -95,10 +88,10 @@ Projeto acadêmico desenvolvido para a disciplina **Projeto de Software** do cur
 - **Universidades** (como ferramenta de apoio ao ensino de programação)
 
 ### O que o torna relevante?
-- **Redução comprovada da evasão** (projetada: de 45% para <15%)
+- **Redução comprovada da evasão** (projetada: de 45% para menos de 15%)
 - **Gamificação baseada em ciência comportamental** (reforço positivo, metas atingíveis)
 - **Arquitetura escalável** (suporta dezenas de milhares de alunos)
-- **Código aberto** (pode ser adaptado para outras áreas de ensino)
+- **Modelagem completa** (documentação UML abrangente)
 
 ---
 
@@ -116,48 +109,59 @@ Projeto acadêmico desenvolvido para a disciplina **Projeto de Software** do cur
 
 ---
 
-## 🛠 Tecnologias Utilizadas
+## 📊 Diagramas UML
 
-### 💻 Front-end
-- **Framework/Biblioteca:** React v18.3.1
-- **Linguagem:** TypeScript 5.6
-- **Estilização:** Tailwind CSS 3.4 + Shadcn/ui
-- **Gerenciamento de Estado:** Zustand 4.5 + React Query 5.0
-- **Build Tool:** Vite 5.4
-- **Gráficos:** Recharts 2.12
+Este projeto contempla a modelagem completa do sistema DevLevel por meio dos seguintes diagramas UML:
 
-### 🖥️ Back-end
-- **Linguagem/Runtime:** Java 17 (JDK 17 LTS)
-- **Framework:** Spring Boot 3.3.5
+| Diagrama | Descrição |
+|----------|-----------|
+| **Diagrama de Casos de Uso** | Representa os atores (Aluno, Mentor, Administrador) e as funcionalidades do sistema |
+| **Diagrama de Classes** | Estrutura estática do sistema, incluindo atributos, métodos e relacionamentos |
+| **Diagramas de Sequência** | Detalhamento da interação temporal entre objetos para os principais casos de uso |
+| **Diagrama de Comunicação** | Ênfase nos relacionamentos estruturais e troca de mensagens entre objetos |
+| **Diagrama de Estados** | Ciclo de vida das principais entidades (Mentoria, Missão, Conteúdo, Badge) |
+| **Diagrama de Componentes e Implantação** | Arquitetura distribuída em nuvem AWS com microsserviços, filas e bancos de dados |
+| **Diagrama Entidade-Relacionamento (DER)** | Modelo lógico do banco de dados PostgreSQL |
+
+Todos os diagramas foram desenvolvidos utilizando **PlantUML** e estão disponíveis na pasta `/diagramas` deste repositório.
+
+---
+
+## 🛠 Tecnologias Utilizadas (Propostas)
+
+### 💻 Front-end (Proposto)
+- **Framework:** React 18 + TypeScript
+- **Estilização:** Tailwind CSS
+- **Build Tool:** Vite
+
+### 🖥️ Back-end (Proposto)
+- **Linguagem:** Java 17
+- **Framework:** Spring Boot 3.x
 - **Banco de Dados:** PostgreSQL 16
-- **ORM / Query Builder:** Hibernate 6.5 / JPA 3.1
-- **Autenticação:** JWT (jjwt 0.12) + Spring Security 6.3
-- **Cache:** Redis 7.2 (para rankings)
-- **Documentação API:** SpringDoc OpenAPI 2.5
+- **ORM:** Hibernate / JPA
+- **Autenticação:** JWT + Spring Security
 
-### ⚙️ Infraestrutura & DevOps
-- **Containerização:** Docker 27.0 + Docker Compose 2.29
-- **Orquestração:** Kubernetes (k3s para produção) - previsto v2.0
-- **Cloud:** AWS (EC2, RDS, ElastiCache) + Vercel (Front-end)
-- **CI/CD:** GitHub Actions + SonarQube
-- **Monitoramento:** Prometheus + Grafana
-- **Logs:** ELK Stack (Elasticsearch, Logstash, Kibana)
+### ⚙️ Infraestrutura (Proposta)
+- **Containerização:** Docker + Docker Compose
+- **Cloud:** AWS (ECS, RDS, S3, CloudFront)
+- **Mensageria:** Amazon SQS
+- **Notificações:** Amazon SES, Amazon SNS, Twilio
 
 ---
 
 ## 🏗 Arquitetura
 
-A arquitetura do **DevLevel** segue o padrão **Monólito Modular** com clara separação de responsabilidades, preparado para futura migração para microsserviços.
+A arquitetura proposta para o **DevLevel** segue o padrão de **microsserviços** implantados na **Amazon ECS**, com os seguintes componentes:
 
-### Visão Geral (Camadas)
-
-| Camada | Responsabilidade | Tecnologia |
-|--------|------------------|------------|
-| **Apresentação** | Interface com usuário (Web) | React + Tailwind |
-| **Gateway** | API Gateway, autenticação, rate limiting | Spring Cloud Gateway |
-| **Aplicação** | Orquestração de casos de uso | Spring Boot Controllers |
-| **Domínio** | Regras de negócio (XP, níveis, missões) | Java POJOs + Services |
-| **Infraestrutura** | Acesso a dados, cache, mensageria | JPA/Hibernate + Redis + RabbitMQ |
+| Camada | Componentes |
+|--------|-------------|
+| **Apresentação** | React Web, React Native, CloudFront |
+| **Gateway** | API Gateway, Load Balancer (ALB) |
+| **Microsserviços** | Usuários, Gamificação, Conteúdo, Mentoria, Fórum, Notificação |
+| **Mensageria** | Amazon SQS (Filas de Notificações e Eventos) |
+| **Processamento** | Worker Transmissão, AWS Lambda |
+| **Notificações** | SES (email), SNS (push), Twilio (SMS) |
+| **Dados** | RDS PostgreSQL (Primary + Read Replica), S3, Redis Cache |
 
 ### Padrões de Design Adotados
 - **Repository Pattern:** Abstração do acesso a dados
@@ -166,9 +170,6 @@ A arquitetura do **DevLevel** segue o padrão **Monólito Modular** com clara se
 - **Strategy Pattern:** Diferentes algoritmos de geração de missões e cálculo de XP
 - **Observer Pattern:** Notificações de level up e conquistas
 - **Factory Pattern:** Criação de missões diárias
-- **Decorator Pattern:** Cálculo de bônus (streaks, rankings)
-
-### Fluxo de Dados Principal
 
 ### Decisões Arquiteturais Importantes
 1. **Monólito Modular vs Microsserviços:** Escolhido monólito por simplicidade inicial, mas com módulos bem definidos (XP, Rankings, Missões, Conteúdos) para facilitar extração futura.
@@ -192,3 +193,32 @@ A arquitetura do **DevLevel** segue o padrão **Monólito Modular** com clara se
 | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=AWS+Deploy" alt="Diagrama de Deploy AWS" width="300"> | <img src="https://via.placeholder.com/300x200/2d2d2d/00ff88?text=API+Map" alt="Mapa de Endpoints" width="300"> |
 
 ---
+
+## 📂 Estrutura do Repositório
+
+
+## 📖 Documentação
+
+A documentação completa do projeto está disponível em formato PDF na pasta `/docs`. O documento contém:
+
+- Introdução e contextualização do problema
+- Modelos de Usuário e Requisitos (Atores, Casos de Uso)
+- Diagramas de Sequência do Sistema e Contratos de Operação
+- Modelos de Projeto (Arquitetura, Componentes, Classes, Sequência, Comunicação, Estados)
+- Modelos de Dados (DER, Esquema do Banco, Estratégias de Mapeamento)
+
+## 👥 Autor
+
+| 👤 Nome | 🖼️ Foto | :octocat: GitHub | 💼 LinkedIn | 📤 Gmail |
+|---------|----------|-----------------|-------------|-----------|
+| Karen Joilly | <img src="https://raw.githubusercontent.com/karenjoilly11/Resenha-de-Artigos-Projeto-de-Software/main/assets/fotokaren.jpg" width="70px" height="70px"> | <div align="center"><a href="https://github.com/vcaraujo"><img src="https://joaopauloaramuni.github.io/image/github6.png" width="50px"></a></div> | <div align="center"><a href="https://www.linkedin.com/in/karen-joilly-araujo-gregorio-de-almeida/"><img src="https://joaopauloaramuni.github.io/image/linkedin2.png" width="50px"></a></div> | <div align="center"><a href="mailto:karenjoilly@gmail.com"><img src="https://joaopauloaramuni.github.io/image/gmail3.png" width="50px"></a></div> |
+
+---
+
+## 📄 Licença
+
+Este projeto é distribuído sob a **[Licença MIT](https://opensource.org/licenses/MIT)** para fins acadêmicos.
+
+---
+
+**Desenvolvido como trabalho acadêmico para a disciplina de Projeto de Software.**
